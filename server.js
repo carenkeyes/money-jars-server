@@ -1,4 +1,4 @@
-require('.dotenv').config();
+//require('.dotenv').config();
 
 const express = require('express');
 const morgan = require('morgan');
@@ -7,6 +7,8 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 
 mongoose.Promise = global.Promise;
+
+const ynabRouter = require('./routers/ynabRouter');
 
 const app = express();
 const {PORT, CLIENT_ORIGIN, DATABASE_URL} = require('./config')
@@ -21,9 +23,11 @@ app.use(
   })
 )
 
-app.get('/api/*', (req, res) => {
+app.get('/api', (req, res) => {
   res.json({ok: true});
 });
+
+app.use('/api/ynab', ynabRouter);
 
 let server;
 
