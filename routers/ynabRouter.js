@@ -45,14 +45,13 @@ router.get('/budgets', (req, res) => {
         console.log('token expired');
         refreshToken()
     } else{
-        retrieveBudgets()   
+        retrieveBudgets()
+            .then(budgets => {res.json({budgets: budgets})}) 
+            .catch(err => console.log(err))
     }
-
-    res.json({status: 'budgets'});
-
 })
 
-async function retrieveBudgets(response){
+async function retrieveBudgets(){
 const budgetList = []
 
     try{
@@ -65,7 +64,7 @@ const budgetList = []
         console.log(`error: ${JSON.stringify(e)}`);
     }
 
-    console.log(budgetList)
+    return budgetList
 
 }
 
