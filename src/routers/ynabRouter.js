@@ -1,8 +1,8 @@
 const USER_INFO = {
-    access_token: '42c06c8bb073d584fc8175f7366fa3585fe4fd516ad1aa194ea84da64ff588b2',
+    access_token:  '862a8e2f2bf1c6d4c1b03b30cd2c4046063788f3acb66e4bb0f28066f3065990',
     expires_in: 7200,
-    refresh_token:'22206ec766d7d4e7ddc18b91151423d5bc8c9458aa16a404488dae983ddffbd4',
-    created_at: 1532628401 
+    refresh_token:'f3a9e6441b52c2fe58b5881c55424300f024e94be584b556dd46073bb5259ab7',
+    created_at:  1532638767 
 };
 
 const express = require('express');
@@ -15,7 +15,7 @@ const jsonParser = bodyParser.json();
 const morgan = require('morgan');
 const mongoose = require('mongoose');
 
-const {CLIENT_SECRET, REDIRECT_URI} = require('../config');
+const {CLIENT_SECRET, REDIRECT_URI} = require('../../config');
 //Oauth code will come from authorization request
 //This is for development only
 
@@ -52,7 +52,7 @@ router.get('/budgets', (req, res) => {
 })
 
 async function retrieveBudgets(){
-const budgetList = []
+    const budgetList = []
 
     try{
         const budgetsResponse = await ynabAPI.budgets.getBudgets();
@@ -67,24 +67,6 @@ const budgetList = []
     return budgetList
 
 }
-
-/*function renderBudgets(results){
-    console.log(results.data.budgets[0].name);
-    console.log(results.data.budgets.length);
-    const list = []
-
-    for(let i=0; i<results.data.budgets.length; i++){    
-            console.log(results.data.budgets[i].name)
-            console.log(results.data.budgets[i].id)
-            list.push(
-                results.data.budgets[i].name,
-                //id:results.data.budgets[i].id
-            )
-    }
-    console.log(`list of budgets: ${list}`)
-    return list
-
-}*/
 
 //For production, add a visit to the authorization page first, then
 //get the access token 

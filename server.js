@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 
 mongoose.Promise = global.Promise;
 
-const ynabRouter = require('./routers/ynabRouter');
+const ynabRouter = require('./src/routers/ynabRouter');
 
 const app = express();
 const {PORT, CLIENT_ORIGIN, DATABASE_URL} = require('./config')
