@@ -17,7 +17,7 @@ const app = express();
 app.use(morgan('common'));
 
 router.route('/')
-    .post( requiredFields('email', 'username', 'password'), (req, res) => {
+    .post(disableWithToken, requiredFields('email', 'username', 'password'), (req, res) => {
         User.create({
             email: req.body.email,
             password: req.body.password,
@@ -36,7 +36,7 @@ router.route('/:id')
         .then(user => res.json({user}));
     });
 
-router.post('/login', requiredFields('email', 'password'), (req, res) => {
+router.post('/login', disableWithToken, requiredFields('email', 'password'), (req, res) => {
     User.findOne({email: req.body.email})
     .then((foundResult) => {
         if(!foundResult){

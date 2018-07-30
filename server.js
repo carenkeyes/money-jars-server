@@ -1,4 +1,4 @@
-//require('.dotenv').config();
+
 
 const express = require('express');
 const morgan = require('morgan');
@@ -9,10 +9,10 @@ const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
 const ynabRouter = require('./src/routers/ynabRouter');
-const userRouter = require('./src/routers/userRouter')
+const userRouter = require('./src/routers/userRouter');
 
 const app = express();
-const {PORT, CLIENT_ORIGIN, DATABASE_URL} = require('./config')
+const {PORT, CLIENT_ORIGIN, DATABASE_URL, TEST_DATABASE_URL} = require('./config')
 
 
 app.use(express.static('public'));
