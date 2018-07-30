@@ -1,7 +1,7 @@
 const USER_INFO = {
-    access_token:  '862a8e2f2bf1c6d4c1b03b30cd2c4046063788f3acb66e4bb0f28066f3065990',
+    access_token:  '862a8e2f2bf1-this-is-fake-4bb0f28066f3065990',
     expires_in: 7200,
-    refresh_token:'f3a9e6441b52c2fe58b5881c55424300f024e94be584b556dd46073bb5259ab7',
+    refresh_token:'f3a9e6441b52c2f-also-fake-56dd46073bb5259ab7',
     created_at:  1532638767 
 };
 

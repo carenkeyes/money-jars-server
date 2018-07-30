@@ -1,4 +1,4 @@
-const bcrypt = require('bycrpt.js');
+const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 const uniqueValidator = require('mongoose-unique-validator');
 require('mongoose-type-email');
@@ -37,4 +37,4 @@ userSchema.methods.comparePassword = function userComparePassword(password){
     return bcrypt.compare(password, this.password);
 }
 
-module.exports = mongoose.model('User', 'UserSchema');
+module.exports = mongoose.model('User', userSchema);
