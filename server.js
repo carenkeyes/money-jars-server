@@ -9,6 +9,7 @@ const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
 const ynabRouter = require('./src/routers/ynabRouter');
+const userRouter = require('./src/routers/userRouter')
 
 const app = express();
 const {PORT, CLIENT_ORIGIN, DATABASE_URL} = require('./config')
@@ -28,6 +29,7 @@ app.get('/api', (req, res) => {
 });
 
 app.use('/api/ynab', ynabRouter);
+app.use('/api/user', userRouter);
 
 let server;
 
