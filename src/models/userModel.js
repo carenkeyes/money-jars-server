@@ -1,5 +1,6 @@
-//const bcrypt = require('bycrpt.js');
+const bcrypt = require('bycrpt.js');
 const mongoose = require('mongoose');
+const uniqueValidator = require('mongoose-unique-validator');
 require('mongoose-type-email');
 mongoose.Promise = global.Promise;
 
@@ -14,33 +15,26 @@ const userSchema =  new mongoose.Schema({
         expires_in: Number,
         refresh_token: String,
         created_at: Number
-    },
-    kids: [{
-        username: {type: String, required: true},
-        password: {type: String, require: true}
-    }]
+    }
 })
 
-userSchema.serialize = function(){
-    return{
-        id: this._id,
-        username: this.username,
-        email: this.email,
-        access_token: this.token.access_token,
-        expires_in: this.token.expires_in,
-        refresh_token: this.token.expires_in,
-        created_at: this.token.created_at
-    };
-};
+userSchema.pre('save', function userPreSave(next){
+    const user = this;
+    if(this.isModified('password') || this.isNew) {
+        return bcrypt.hash(user.password, 10)
+            .then((hash) => {
+                user.password = hash;
+                return next();
+            })
+            .catch(err => next(err));
+    }
+    return next();
+})
 
-/*userSchema.methods.validatePassword = function(password){
-    return bycrpt.compare(password, this.password)
+userSchema.plugin(uniqueValidator);
+
+userSchema.methods.comparePassword = function userComparePassword(password){
+    return bcrypt.compare(password, this.password);
 }
 
-userSchema.statics.hashPassword = function(password){
-    return bcrypt.hash(password, 10);
-}*/
-
-const User = mongoose.model("User", userSchema)
-
-module.exports = {User};
+module.exports = mongoose.model('User', 'UserSchema');
