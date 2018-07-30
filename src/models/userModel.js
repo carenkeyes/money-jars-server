@@ -1,13 +1,12 @@
-const bcrypt = require('bycrpt.js');
+//const bcrypt = require('bycrpt.js');
 const mongoose = require('mongoose');
 require('mongoose-type-email');
 mongoose.Promise = global.Promise;
 
-const Schema = mongoose.Schema;
 
-const userSchema = new Schema({
+const userSchema =  new mongoose.Schema({
     username:{type: String, required: true, unique: true},
-    email: {type: Schema.Types.Email, required: true},
+    email: {type: mongoose.Schema.Types.Email, required: true},
     password: {type: String, required: true},
     oauth_code: {type: String},
     token: {
@@ -22,7 +21,7 @@ const userSchema = new Schema({
     }]
 })
 
-userSchema.methods.serialize = function(){
+userSchema.serialize = function(){
     return{
         id: this._id,
         username: this.username,
@@ -42,5 +41,6 @@ userSchema.statics.hashPassword = function(password){
     return bcrypt.hash(password, 10);
 }*/
 
-const User = mongoose.model('user', userSchema);
-module.exports - {User};
+const User = mongoose.model("User", userSchema)
+
+module.exports = {User};
