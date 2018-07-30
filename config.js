@@ -7,5 +7,8 @@ module.exports = {
     CLIENT_SECRET: process.env.CLIENT_SECRET,
     REDIRECT_URI: process.env.REDIRECT_URI || 'urn:ietf:wg:oauth:2.0:oob',
     CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
-    OAUTH_CODE: process.env.OAUTH_CODE
+    OAUTH_CODE: process.env.OAUTH_CODE,
+    ENV: process.env.NODE_ENV || 'production',
+    SECRET: process.env.JWT_SECRET,
+    EXPIRATION: 864000,
 }
