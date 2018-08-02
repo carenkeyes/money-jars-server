@@ -62,10 +62,10 @@ router.post('/login', disableWithToken, requiredFields('email', 'password'), (re
             const token = jwt.sign(tokenPayload, config.SECRET, {
                 expiresIn: config.EXPIRATION,
             });
-            return res.json({token: `Bearer: ${token}`});
+            return res.json({token: `Bearer: ${token}`, id: `${tokenPayload._id}`});
         });
     })
     .catch(report => res.status(400).json(errorParser.generateErrorResponse(report)));
 });
 
-    module.exports = {router};
+module.exports = router;

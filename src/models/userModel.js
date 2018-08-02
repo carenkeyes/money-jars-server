@@ -9,13 +9,10 @@ const userSchema =  new mongoose.Schema({
     username:{type: String, required: true, unique: true},
     email: {type: mongoose.Schema.Types.Email, required: true},
     password: {type: String, required: true},
-    oauth_code: {type: String},
-    token: {
-        access_token: String,
-        expires_in: Number,
-        refresh_token: String,
-        created_at: Number
-    }
+    access_token: String,
+    expires_in: Number,
+    refresh_token: String,
+    created_at: Number
 })
 
 userSchema.pre('save', function userPreSave(next){

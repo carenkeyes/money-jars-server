@@ -1,4 +1,4 @@
-module.exports.disableWithToken = (req, res, next) => {
+module.exports = (req, res, next) => {
     if (req.headers.Authorization || req.headers.authorization){
         return res.status(400).json({
             generalMessage: 'Auth Problem',
@@ -6,4 +6,4 @@ module.exports.disableWithToken = (req, res, next) => {
         });
     }
     return next();
-}
+};
