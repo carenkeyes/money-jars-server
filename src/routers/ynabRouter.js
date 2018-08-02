@@ -17,8 +17,8 @@ const {CLIENT_SECRET, REDIRECT_URI} = require('../../config');
 
 
 const ynab = require('ynab');
-let accessToken = 'e6213ca765d0b60781211e505d30e819b3617dace4c7b77f0ca38406d9f9baad'
-const ynabAPI = new ynab.API(accessToken);
+let accessToken;
+//const ynabAPI = new ynab.API(accessToken);
 
 mongoose.Promise = global.Promise;
 
@@ -32,13 +32,13 @@ router.get('/', (req, res) => {
 });
 
 // refreshToken,
-router.get('/budgets/:id', (req, res) => {
+router.get('/budgets/:id', refreshToken, (req, res) => {
 
     return User
         .findById(req.params.id)
-        /*.then(function(user){
+        .then(function(user){
             accessToken = user.access_token;
-        })*/
+        })
     .then(function(){
         return retrieveBudgets()
     })
@@ -50,6 +50,8 @@ router.get('/budgets/:id', (req, res) => {
 
 async function retrieveBudgets(){
     console.log('retrieve budgets ran');
+    console.log(`accessToken: ${accessToken}`)
+    const ynabAPI = new ynab.API(accessToken);
     const budgetList = []
 
     try{
@@ -90,6 +92,7 @@ router.post('/auth', (req, res) => {
                 refresh_token: data.refresh_token,
                 created_at: data.created_at,
             };
+            console.log(tokenData);
             return tokenData;
         })
         .then (function(updateUser){
