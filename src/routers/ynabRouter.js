@@ -31,7 +31,6 @@ router.get('/', (req, res) => {
     res.json({status: 'working'});
 });
 
-// refreshToken,
 router.get('/budgets/:id', refreshToken, (req, res) => {
 
     return User
@@ -67,6 +66,87 @@ async function retrieveBudgets(){
     console.log(`budget list: ${budgetList}`)
     return budgetList
 }
+
+router.get('/categories/:id', refreshToken, (req, res) => {
+    budgetID = req.query.budgetid;
+
+    return User
+        .findById(req.params.id)
+        .then(function(user){
+            accessToken = user.access_token;
+        })
+    .then(function(){
+        return retrieveCategories(budgetID)
+    })
+    .then(function(categories){
+        res.json(categories);
+    })   
+    .catch(err => res.status(400).json(errorParser.generateErrorResponse(err)))
+})
+
+async function retrieveCategories(budgetID){
+    console.log(`budgetID: ${budgetID}`)
+    const ynabAPI = new ynab.API(accessToken);
+    const categoryList = []
+
+    try{
+        const categoryResponse = await ynabAPI.categories.getCategories(budgetID)
+        console.log(`category response: ${categoryResponse}`);
+        const categoryGroups = categoryResponse.data.category_groups;
+        for (let categoryGroup of categoryGroups){
+            let group = {
+                name: categoryGroup.name,
+                id: categoryGroup.id,
+                categories: categoryGroup.categories
+            }
+            categoryList.push(group);
+        }
+    } catch (e) {
+        console.log(`error: ${JSON.stringify(e)}`);
+    }
+
+    console.log(`category list: ${categoryList}`)
+    return categoryList
+}
+
+router.get('/category/:id', refreshToken, (req, res) => {
+    const categoryID = req.query.categoryid;
+    const budgetID = req.query.budgetid;
+
+    return User
+        .findById(req.params.id)
+        .then(function(user){
+            accessToken = user.access_token;
+        })
+    .then(function(){
+        return retrieveBalance(budgetID, categoryID)
+    })
+    .then(function(balance){
+        res.json(balance);
+    })   
+    .catch(err => res.status(400).json(errorParser.generateErrorResponse(err)))
+
+})
+
+async function retrieveBalance(budID, catID){
+    let category;
+    const ynabAPI = new ynab.API(accessToken);
+
+    try{
+        const singleCategory = await ynabAPI.categories
+        .getCategoryById(budID, catID)
+        .then(response => {
+            category = response.data.category;    
+        })
+    }
+    catch (e) {
+            console.log(`error: ${JSON.stringify(e)}`);
+    }  
+    console.log(category);  
+    return category;
+}
+
+
 
 //For production, add a visit to the authorization page first, then
 //get the access token 
