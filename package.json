@@ -19,10 +19,14 @@
     "jsonwebtoken": "^8.2.0",
     "mongoose": "^5.0.6",
     "mongoose-type-email": "^1.0.5",
+    "mongoose-unique-validator": "^2.0.1",
     "morgan": "^1.7.0",
     "passport": "^0.3.2",
     "passport-jwt": "^2.2.1",
-    "passport-local": "^1.0.0"
+    "passport-local": "^1.0.0",
+    "superagent": "^3.8.3",
+    "throng": "^4.0.0",
+    "ynab": "^1.2.0"
   },
   "devDependencies": {
     "chai": "^4.0.1",
