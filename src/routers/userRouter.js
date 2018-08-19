@@ -22,6 +22,7 @@ router.route('/')
             email: req.body.email,
             password: req.body.password,
             username: req.body.username,
+            usertype: req.body.usertype,
         })
         .then(() => res.status(201).send())
         .catch(report => res.status(400).json(errorParser.generateErrorResponse(report)));
@@ -30,20 +31,22 @@ router.route('/')
         res.status(200).json(req.user);
     });
 
-router.route('/:id')
+router.route('/protected/:id')
     .get(passport.authenticate('jwt', {session: false}), (req, res) => {
         User.findById(req.params.id)
+        .populate('children', '_id')
         .then(user => res.json({user}));
-    });
+    })
 
-router.post('/login', disableWithToken, requiredFields('email', 'password'), (req, res) => {
-    User.findOne({email: req.body.email})
+router.post('/login', disableWithToken, requiredFields('username', 'password'), (req, res) => {
+    User.findOne({username: req.body.username})
     .then((foundResult) => {
         if(!foundResult){
             return res.status(400).json({
-                generalMessage: 'Email or password is incorrect',
+                generalMessage: 'Username or password is incorrect',
             });
         }
+        console.log(foundResult);
         return foundResult;
     })
     .then((foundUser) => {
@@ -51,7 +54,7 @@ router.post('/login', disableWithToken, requiredFields('email', 'password'), (re
         .then((comparingResult) => {
             if(!comparingResult) {
                 return res.status(400).json({
-                    generalMessage: 'Email or password is incorrect',
+                    generalMessage: 'Username or password is incorrect',
                 });
             }
             const tokenPayload = {
@@ -62,7 +65,7 @@ router.post('/login', disableWithToken, requiredFields('email', 'password'), (re
             const token = jwt.sign(tokenPayload, config.SECRET, {
                 expiresIn: config.EXPIRATION,
             });
-            return res.json({token: `Bearer: ${token}`, id: `${tokenPayload._id}`});
+            return res.json({token: `Bearer: ${token}`});
         });
     })
     .catch(report => res.status(400).json(errorParser.generateErrorResponse(report)));
