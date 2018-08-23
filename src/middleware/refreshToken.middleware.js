@@ -9,11 +9,12 @@ module.exports = (req, res, next) => {
 
     User
         .findById(userID)
+        .populate('budget')
         .then(function(user){
-            token.access_token = user.access_token
-            token.expires_in = user.expires_in
-            token.refresh_token = user.refresh_token
-            token.created_at = user.created_at
+            token.access_token = user.budget.access_token
+            token.expires_in = user.budget.expires_in
+            token.refresh_token = user.budget.refresh_token
+            token.created_at = user.budget.created_at
         })
     .then((user) => {
         if(!token.access_token){

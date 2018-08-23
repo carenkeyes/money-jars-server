@@ -4,6 +4,7 @@ const router = express.Router();
 const request = require('superagent');
 const refreshToken = require('../middleware/refreshToken.middleware');
 const User = require('../models/userModel');
+const Account = require('../models/ynabModel');
 const errorParser = require('../helpers/errorsParserHelper');
 
 const bodyParser = require('body-parser');
@@ -32,22 +33,30 @@ router.get('/', (req, res) => {
 });
 
 router.get('/budgets/:id', refreshToken, (req, res) => {
-
     return User
         .findById(req.params.id)
-        .then(function(user){
-            accessToken = user.access_token;
-        })
-    .then(function(){
-        return retrieveBudgets()
-    })
-    .then(function(budgets){
-        res.json(budgets);
-    })   
+        .populate('budget')
+    .then((user) => retrieveBudgets(user.budget.access_token))
+    //.then((accessToken) => retrieveBudgets(accessToken))
+    .then((budgets) =>res.json(budgets))   
     .catch(err => res.status(400).json(errorParser.generateErrorResponse(err)))
-})
+});
 
-async function retrieveBudgets(){
+async function getBudgetInfo(budget){
+    console.log(`budget: ${budget}`)
+    const foundAccount = {}
+    try {
+        Account.findById(budget)
+        .then((account) => foundAccount.token = account)
+    }
+    catch(e){
+        console.log(`error: ${JSON.stringify}`)
+    }
+    console.log(`accessToken: ${foundAccount.token}`)
+    return foundAccount
+}
+
+async function retrieveBudgets(accessToken){
     console.log('retrieve budgets ran');
     console.log(`accessToken: ${accessToken}`)
     const ynabAPI = new ynab.API(accessToken);
@@ -67,13 +76,13 @@ async function retrieveBudgets(){
     return budgetList
 }
 
-router.get('/categories/:id', refreshToken, (req, res) => {
+router.get('/categories/:id',  (req, res) => {
     budgetID = req.query.budgetid;
 
-    return User
+    return Account
         .findById(req.params.id)
-        .then(function(user){
-            accessToken = user.access_token;
+        .then(function(account){
+            accessToken = account.access_token;
         })
     .then(function(){
         return retrieveCategories(budgetID)
@@ -86,6 +95,7 @@ router.get('/categories/:id', refreshToken, (req, res) => {
 
 async function retrieveCategories(budgetID){
     console.log(`budgetID: ${budgetID}`)
+    console.log(`accessToken: ${accessToken}`)
     const ynabAPI = new ynab.API(accessToken);
     const categoryList = []
 
@@ -113,10 +123,10 @@ router.get('/category/:id', refreshToken, (req, res) => {
     const categoryID = req.query.categoryid;
     const budgetID = req.query.budgetid;
 
-    return User
+    return Account
         .findById(req.params.id)
-        .then(function(user){
-            accessToken = user.access_token;
+        .then(function(account){
+            accessToken = account.access_token;
         })
     .then(function(){
         return retrieveBalance(budgetID, categoryID)
@@ -175,18 +185,32 @@ router.post('/auth', (req, res) => {
             console.log(tokenData);
             return tokenData;
         })
-        .then (function(updateUser){
-            User
-                .findByIdAndUpdate(userID, {$set: updateUser})
-                .then(updated => res.json(updated));
+        .then (function(tokenData){
+            Account.create(tokenData)               
+                .then(account => addToUser(account._id, userID));
         })
-        .catch(err => res.status(400).json(errorParser.generateErrorResponse(err)))
-    
+        .then(updated => res.json(updated))
+        .catch(err => res.status(400).json(errorParser.generateErrorResponse(err)))    
 })
+
+async function addToUser(accountId, userId){
+    let updatedUser;
+
+    try{
+        User.findByIdAndUpdate(userId, {$set: {budget: accountId}} )
+        .then((user) => updatedUser = user);
+    }
+    catch(e){
+        console.log(`error: ${JSON.stringify}`)
+    }
+    return updatedUser;
+}
 
 router.get('/test/:id', (req, res) => {
     User
         .findById(req.params.id)
+        .populate('budget')
+        .populate('children')
         .then(user => res.json({user}))
 })
 
