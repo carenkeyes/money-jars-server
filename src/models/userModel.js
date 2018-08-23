@@ -13,7 +13,7 @@ const userSchema =  new mongoose.Schema({
     budget_id: String,
     category_id: String,
     budget_amount: Number,
-    children: [{type: mongoose.Schema.Types.ObjectId, ref: 'user'}],
+    children: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
     access_token: String,
     expires_in: Number,
     refresh_token: String,

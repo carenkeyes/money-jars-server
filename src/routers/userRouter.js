@@ -36,7 +36,7 @@ router.route('/protected/')
        console.log(`requestion: ${req}`) 
         User.findById(req.user)
         //.then(user => console.log(`user: ${user}`))
-        //.populate('children', '_id')
+        .populate('children')
         .then(user => res.json({user}));
     })
 
@@ -74,6 +74,8 @@ router.post('/login', disableWithToken, requiredFields('username', 'password'), 
 });
 
 router.put('/child/:id', (req, res) => {
+    console.log(req.params.id);
+    let parentId = req.params.id;
     User.findOne({username: req.body.username})
         .then((foundChild) => {
             if(!foundChild){
@@ -85,11 +87,27 @@ router.put('/child/:id', (req, res) => {
             return foundChild;
         })
         .then((child) => {
-            User.findByIdAndUpdate(req.params.id, {$addToSet: {children: child}})
+            addChild(child.id, parentId )
         })
         .then(a => res.status(204).end())
         .catch(err => res.status(400).json(errorParser.generateErrorResponse(report)));
         
     });
 
+async function addChild(childId, parentId){
+    console.log('add child ran')
+    let parent;
+
+    try{
+        User.findByIdAndUpdate(parentId, {$addToSet: {children: childId}})
+            .then((user) => parent=user)
+    }
+    catch(e){
+        console.log(`error: ${JSON.stringify}`)
+    }
+    return parent;
+}
+
 module.exports = router;
+
+//User.findByIdAndUpdate(req.params.id, {$addToSet: {children: child._id}})
