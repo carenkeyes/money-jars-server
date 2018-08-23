@@ -1,16 +1,12 @@
-const USER_INFO = {
-    access_token:  '862a8e2f2bf1-this-is-fake-4bb0f28066f3065990',
-    expires_in: 7200,
-    refresh_token:'f3a9e6441b52c2f-also-fake-56dd46073bb5259ab7',
-    created_at:  1532638767 
-};
 
 const express = require('express');
 const router = express.Router();
 const request = require('superagent');
+const refreshToken = require('../middleware/refreshToken.middleware');
+const User = require('../models/userModel');
+const errorParser = require('../helpers/errorsParserHelper');
 
 const bodyParser = require('body-parser');
-const jsonParser = bodyParser.json();
 
 const morgan = require('morgan');
 const mongoose = require('mongoose');
@@ -21,8 +17,8 @@ const {CLIENT_SECRET, REDIRECT_URI} = require('../../config');
 
 
 const ynab = require('ynab');
-let accessToken = USER_INFO.access_token;
-const ynabAPI = new ynab.API(accessToken);
+let accessToken;
+//const ynabAPI = new ynab.API(accessToken);
 
 mongoose.Promise = global.Promise;
 
@@ -35,23 +31,26 @@ router.get('/', (req, res) => {
     res.json({status: 'working'});
 });
 
-router.get('/budgets', (req, res) => {
+router.get('/budgets/:id', refreshToken, (req, res) => {
 
-    console.log(`created: ${USER_INFO.created_at}`)
-    console.log(`expires: ${USER_INFO.expires_in}`)
-    console.log(`current date: ${Math.floor(Date.now()/1000)}`);
-
-    if (USER_INFO.created_at + USER_INFO.expires_in < Math.floor(Date.now()/1000)){
-        console.log('token expired');
-        refreshToken()
-    } else{
-        retrieveBudgets()
-            .then(budgets => {res.json({budgets: budgets})}) 
-            .catch(err => console.log(err))
-    }
+    return User
+        .findById(req.params.id)
+        .then(function(user){
+            accessToken = user.access_token;
+        })
+    .then(function(){
+        return retrieveBudgets()
+    })
+    .then(function(budgets){
+        res.json(budgets);
+    })   
+    .catch(err => res.status(400).json(errorParser.generateErrorResponse(err)))
 })
 
 async function retrieveBudgets(){
+    console.log('retrieve budgets ran');
+    console.log(`accessToken: ${accessToken}`)
+    const ynabAPI = new ynab.API(accessToken);
     const budgetList = []
 
     try{
@@ -64,20 +63,98 @@ async function retrieveBudgets(){
         console.log(`error: ${JSON.stringify(e)}`);
     }
 
+    console.log(`budget list: ${budgetList}`)
     return budgetList
-
 }
+
+router.get('/categories/:id', refreshToken, (req, res) => {
+    budgetID = req.query.budgetid;
+
+    return User
+        .findById(req.params.id)
+        .then(function(user){
+            accessToken = user.access_token;
+        })
+    .then(function(){
+        return retrieveCategories(budgetID)
+    })
+    .then(function(categories){
+        res.json(categories);
+    })   
+    .catch(err => res.status(400).json(errorParser.generateErrorResponse(err)))
+})
+
+async function retrieveCategories(budgetID){
+    console.log(`budgetID: ${budgetID}`)
+    const ynabAPI = new ynab.API(accessToken);
+    const categoryList = []
+
+    try{
+        const categoryResponse = await ynabAPI.categories.getCategories(budgetID)
+        console.log(`category response: ${categoryResponse}`);
+        const categoryGroups = categoryResponse.data.category_groups;
+        for (let categoryGroup of categoryGroups){
+            let group = {
+                name: categoryGroup.name,
+                id: categoryGroup.id,
+                categories: categoryGroup.categories
+            }
+            categoryList.push(group);
+        }
+    } catch (e) {
+        console.log(`error: ${JSON.stringify(e)}`);
+    }
+
+    console.log(`category list: ${categoryList}`)
+    return categoryList
+}
+
+router.get('/category/:id', refreshToken, (req, res) => {
+    const categoryID = req.query.categoryid;
+    const budgetID = req.query.budgetid;
+
+    return User
+        .findById(req.params.id)
+        .then(function(user){
+            accessToken = user.access_token;
+        })
+    .then(function(){
+        return retrieveBalance(budgetID, categoryID)
+    })
+    .then(function(balance){
+        res.json(balance);
+    })   
+    .catch(err => res.status(400).json(errorParser.generateErrorResponse(err)))
+
+})
+
+async function retrieveBalance(budID, catID){
+    let category;
+    const ynabAPI = new ynab.API(accessToken);
+
+    try{
+        const singleCategory = await ynabAPI.categories
+        .getCategoryById(budID, catID)
+        .then(response => {
+            category = response.data.category;    
+        })
+    }
+    catch (e) {
+            console.log(`error: ${JSON.stringify(e)}`);
+    }  
+    console.log(category);  
+    return category;
+}
+
+
 
 //For production, add a visit to the authorization page first, then
 //get the access token 
 //They are two steps currently because of development limitations
 router.post('/auth', (req, res) => {
-    console.log('redirect worked')
-    let code = "95db61b01a1072766f8bf79622aae449a8134963c79b0afbe1368d0538368ea3"   
-    getToken(code)
-})
+    const userID = req.query.id; 
+    const code = req.query.code;
 
-function getToken(code){
     request
         .post('https://app.youneedabudget.com/oauth/token')
         .send({
@@ -87,40 +164,30 @@ function getToken(code){
             grant_type: "authorization_code",
             code: `${code}`
         })
-        .then(res => {
-            USER_INFO.access_token = res.body.access_token
-            USER_INFO.expires_in = res.body.expires_in
-            USER_INFO.refresh_token = res.body.refresh_token
-            USER_INFO.created_at = res.body.created_at
-            console.log(USER_INFO)
+        .then(function(response){
+            const data = JSON.parse(response.text);
+            const tokenData = {
+                access_token: data.access_token,
+                expires_in: data.expires_in,
+                refresh_token: data.refresh_token,
+                created_at: data.created_at,
+            };
+            console.log(tokenData);
+            return tokenData;
         })
-        .catch(function(err){
-            console.log(err.message)
+        .then (function(updateUser){
+            User
+                .findByIdAndUpdate(userID, {$set: updateUser})
+                .then(updated => res.json(updated));
         })
+        .catch(err => res.status(400).json(errorParser.generateErrorResponse(err)))
     
-}
+})
 
-function refreshToken(){
-    console.log('refresh token ran')
-    request
-        .post('https://app.youneedabudget.com/oauth/token')
-        .send({
-            client_id: "524cb6ed48eb7037b8391bc45974590dace8e9b2434cc03e5ae595b54412cced",
-            client_secret: `${CLIENT_SECRET}`,
-            grant_type: 'refresh_token',
-            refresh_token: `${USER_INFO.refresh_token}`
-        })
-        .then(res => {
-            USER_INFO.access_token = res.body.access_token
-            USER_INFO.expires_in = res.body.expires_in
-            USER_INFO.refresh_token = res.body.refresh_token
-            USER_INFO.created_at = res.body.created_at
-            console.log(USER_INFO)
-            retrieveBudgets();
-        })
-        .catch(function(err){
-            console.log(err.message)
-        })
-}
+router.get('/test/:id', (req, res) => {
+    User
+        .findById(req.params.id)
+        .then(user => res.json({user}))
+})
 
 module.exports = router;
