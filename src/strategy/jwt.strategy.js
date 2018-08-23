@@ -4,12 +4,13 @@ const User = require('../models/userModel');
 const config = require('../../config');
 
 module.exports = (passport) => {
+    console.log('passport');
     const options = {};
     options.jwtFromRequest = ExtractJwt.fromAuthHeader();
     options.secretOrKey = config.SECRET;
-    console.log('something', options.jwtFromRequest);
+    console.log(`options: ${options.jwtFromRequest}`);
     passport.use(new JwtStrategy(options, (jwtPayload, done) => {
-        console.log(jwtPayload)
+        console.log(`jwtPayload: ${jwtPayload}`)
         User.findById(jwtPayload._id)
             .then((user) => {
                 if (user){
@@ -26,3 +27,4 @@ module.exports = (passport) => {
             .catch(error => done(error, false));
     }));
 };
+

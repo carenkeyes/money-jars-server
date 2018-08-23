@@ -17,12 +17,12 @@ const app = express();
 app.use(morgan('common'));
 
 router.route('/')
-    .post(disableWithToken, requiredFields('email', 'username', 'password'), (req, res) => {
+    .post(disableWithToken, requiredFields('username', 'password'), (req, res) => {
         User.create({
             email: req.body.email,
             password: req.body.password,
             username: req.body.username,
-            usertype: req.body.usertype,
+            usertype: req.body.type,
         })
         .then(() => res.status(201).send())
         .catch(report => res.status(400).json(errorParser.generateErrorResponse(report)));
@@ -31,10 +31,12 @@ router.route('/')
         res.status(200).json(req.user);
     });
 
-router.route('/protected/:id')
+router.route('/protected/')
     .get(passport.authenticate('jwt', {session: false}), (req, res) => {
-        User.findById(req.params.id)
-        .populate('children', '_id')
+       console.log(`requestion: ${req}`) 
+        User.findById(req.user)
+        //.then(user => console.log(`user: ${user}`))
+        //.populate('children', '_id')
         .then(user => res.json({user}));
     })
 
@@ -46,7 +48,7 @@ router.post('/login', disableWithToken, requiredFields('username', 'password'), 
                 generalMessage: 'Username or password is incorrect',
             });
         }
-        console.log(foundResult);
+        //console.log(foundResult);
         return foundResult;
     })
     .then((foundUser) => {
@@ -63,12 +65,31 @@ router.post('/login', disableWithToken, requiredFields('username', 'password'), 
                 username: foundUser.username,
             };
             const token = jwt.sign(tokenPayload, config.SECRET, {
-                expiresIn: config.EXPIRATION,
+
             });
             return res.json({token: `Bearer: ${token}`});
         });
     })
     .catch(report => res.status(400).json(errorParser.generateErrorResponse(report)));
 });
+
+router.put('/child/:id', (req, res) => {
+    User.findOne({username: req.body.username})
+        .then((foundChild) => {
+            if(!foundChild){
+                return res.status(400).json({
+                    generalMessage:'Cannot find child account',
+                });
+            }
+            console.log(foundChild)
+            return foundChild;
+        })
+        .then((child) => {
+            User.findByIdAndUpdate(req.params.id, {$addToSet: {children: child}})
+        })
+        .then(a => res.status(204).end())
+        .catch(err => res.status(400).json(errorParser.generateErrorResponse(report)));
+        
+    });
 
 module.exports = router;
