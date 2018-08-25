@@ -211,6 +211,7 @@ router.get('/test/:id', (req, res) => {
         .findById(req.params.id)
         .populate('budget')
         .populate('children')
+        .populate('goals')
         .then(user => res.json({user}))
 })
 

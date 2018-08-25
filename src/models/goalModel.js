@@ -3,6 +3,7 @@ mongoose.Promise = global.Promise;
 
 const goalSchema = new mongoose.Schema({
     title: String,
+    category: String,
     goal_amount: Number,
     saved_amount: Number,
     goal_image: String,

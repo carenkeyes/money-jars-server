@@ -36,7 +36,9 @@ router.route('/protected/')
        console.log(`requestion: ${req}`) 
         User.findById(req.user)
         //.then(user => console.log(`user: ${user}`))
-        .populate('children', 'budget')
+        .populate('children')
+        .populate('budget')
+        .populate('goals')
         .then(user => res.json({user}));
     })
 
