@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-require('mongoose-type-email');
 mongoose.Promise = global.Promise;
 
 const accountSchema = new mongoose.Schema({
