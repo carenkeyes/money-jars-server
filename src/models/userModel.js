@@ -10,6 +10,7 @@ const userSchema =  new mongoose.Schema({
     email: {type: mongoose.Schema.Types.Email},
     password: {type: String, required: true},
     usertype: String,
+    budget_id: String,
     category_id: String,
     category_balance: Number,
     children: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],

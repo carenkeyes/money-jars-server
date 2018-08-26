@@ -23,8 +23,9 @@ router.route('/')
             password: req.body.password,
             username: req.body.username,
             usertype: req.body.type,
+            budget: req.body.budget,
         })
-        .then(() => res.status(201).send())
+        .then((user) => res.status(201).json(user))
         .catch(report => res.status(400).json(errorParser.generateErrorResponse(report)));
     })
     .get(passport.authenticate('jwt', {session: false}), (req, res) => {
@@ -91,10 +92,22 @@ router.put('/child/:id', (req, res) => {
         .then((child) => {
             addChild(child.id, parentId )
         })
-        .then(a => res.status(204).end())
+        .then(a => res.status(201).end())
         .catch(err => res.status(400).json(errorParser.generateErrorResponse(report)));
         
     });
+
+router.delete('/:id', (req, res) => {
+    User.findByIdAndRemove(req.params.id)
+    .then(() => res.status(204).end())
+})
+
+router.put('/:id', (req, res) => {
+    User.findByIdAndUpdate(req.params.id, {
+        $set: {category_id: req.body.category_id}
+    })
+    .then(() => res.status(204).send())
+})
 
 async function addChild(childId, parentId){
     console.log('add child ran')

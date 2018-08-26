@@ -51,7 +51,8 @@ router.route('/')
         .put((req, res) => {
             Goal.findByIdAndUpdate(req.params.id,
                 {
-                    $inc: {saved_amount: req.body.change}
+                    $inc: {saved_amount: req.body.change},
+                    $set: {withdraw_request: req.body.request}
                 }
             ).then(() => res.status(204).send())
             .catch(report => res.status(400).json(errorParser.generateErrorResponse(report)))
@@ -60,5 +61,12 @@ router.route('/')
             Goal.findByIdAndRemove(req.params.id)
             .then(() => res.status(204).end());
         });
+
+        router.route('/request/:id')
+            .put((req, res) => {
+                Goal.findByIdAndUpdate(req.params.id, {$unset: {withdraw_request: ''}})
+                .then(() => res.status(204).end())
+            })
+            
 
 module.exports = router;
