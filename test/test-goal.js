@@ -7,7 +7,7 @@ const expect = chai.expect;
 
 const Goal = require('../src/models/goalModel');
 const {app, runServer, closeServer} = require('../server');
-const {TEST_DATABASE_URL, config} = require('../config');
+const {TEST_DATABASE_URL} = require('../config');
 
 chai.use(chaiHttp);
 
@@ -80,7 +80,6 @@ describe('Goal endpoint', function(){
                 })
                 .then(function(goal){
                     console.log(goal.id)
-                    //expect(singleGoal._id).to.equal(goal._id);
                     expect(singleGoal.title).to.equal(goal.title);
                     expect(singleGoal.goal_amount).to.equal(goal.goal_amount);
                     expect(singleGoal.category).to.equal(goal.category);
@@ -99,17 +98,6 @@ describe('Goal endpoint', function(){
                 .then(function(res){
                     console.log(`new goal response: ${res}`)
                     expect(res).to.have.status(201);
-                   /* expect(res).to.be.json;
-                    expect(res.body).to.include.keys('_id', 'title', 'category', 'goal_amount');
-                    expect(res.body.title).to.equal(newGoal.title);
-                    expect(res.body.category).to.equal(newGoal.category);
-                    expect(res.body.goal_amount).to.equal(newGoal.goal_amount);
-                    return Goal.findById(res.body._id)
-                })
-                .then(function(resGoal){
-                    expect(resGoal.title).to.equal(newGoal.title);
-                    expect(resGoal.category).to.equal(newGoal.category);
-                    expect(resGoal.goal_amount).to.equal(newGoal.goal_amount);*/
                 })
         })
     })
