@@ -86,13 +86,13 @@ router.put('/child/:id', (req, res) => {
                     generalMessage:'Cannot find child account',
                 });
             }
-            console.log(foundChild)
+            console.log(`found child: ${foundChild}`)
             return foundChild;
         })
         .then((child) => {
             addChild(child.id, parentId )
         })
-        .then(a => res.status(201).end())
+        .then(a => res.status(204).end())
         .catch(err => res.status(400).json(errorParser.generateErrorResponse(report)));
         
     });
@@ -106,7 +106,8 @@ router.put('/:id', (req, res) => {
     User.findByIdAndUpdate(req.params.id, {
         $set: {category_id: req.body.category_id}
     })
-    .then(() => res.status(204).send())
+    .then(a => res.status(204).end())
+    .catch(err => res.status(400).json(errorParser.generateErrorResponse(report)));
 })
 
 async function addChild(childId, parentId){
@@ -120,6 +121,7 @@ async function addChild(childId, parentId){
     catch(e){
         console.log(`error: ${JSON.stringify}`)
     }
+    console.log(`parent: ${parent}`)
     return parent;
 }
 

@@ -57,13 +57,12 @@ describe('User endpoint', function(){
             return User
                 .findOne()
                 .then(function(foundUser){
-                    console.log(`foundUser: ${foundUser}`)
                     testUser.username = foundUser.username
                     testUser.password = foundUser.password
                 })
 
                 return chai.request(app)
-                    .post('/auth/login')
+                    .post('/api/user/login')
                     .send(testUser)
                     .then(function(res){
                         expect(res).to.have.status(200);
@@ -73,7 +72,7 @@ describe('User endpoint', function(){
         });
     });
 
-    describe('User authentication', function(){
+    describe('{Protected user data}', function(){
         
         it('should retrieve user id', function(){
         const mockUser = generateUserData();
@@ -85,15 +84,94 @@ describe('User endpoint', function(){
         });
 
         return chai.request(app)
-            .get('/user/userdata')
+            .get('/api/user/protected')
             .set('Authorization', `Bearer ${token}`)
             .then(function(res){
                 expect(res).to.have.status(304);
                 expect(res).to.be.json;
-                expect(res.body).to.include.keys('id', 'username', 'email')
+                expect(res.body).to.include.keys('_id', 'username', 'email')
             })
 
         });
-    }); 
+    });
+    
+    describe('POST endpoint', function(){
 
+        it('should add a new user', function(){
+            const newUser = generateUserData();
+
+            return chai.request(app)
+                .post('/api/user')
+                .send(newUser)
+                .then(function(res){
+                    expect(res).to.have.status(201);
+                    expect(res).to.be.json;
+                    expect(res.body).to.include.keys('_id', 'username', 'email');
+                    expect(res.body.username).to.equal(newUser.username);
+                    expect(res.body.email).to.equal(newUser.email.toLowerCase());
+                    return User.findById(res.body._id);
+                })
+                .then(function(foundUser){
+                    expect(foundUser.username).to.equal(newUser.username);
+                });
+        }); 
+        
+        
+    });
+
+    describe('PUT endpoint', function(){
+        it('should add a child user to parent profile', function(){
+            const childUser = {}
+            const parentUser = {}
+
+            return User
+                .find()
+                .then(function(user){
+                    parentUser._id = user[0]._id;
+                    childUser.username = user[1].username;
+                    childUser._id = user[1]._id;
+                    console.log(`parent: ${parentUser._id} child: ${childUser.username}`)
+                return chai.request(app)
+                .put(`/api/user/child/${parentUser._id}`)
+                .send(childUser)
+                })
+            .then(function(res){
+                expect(res).to.have.status(204);
+                return User.findById(parentUser._id)
+            })
+            .then(function(foundParent){
+                console.log(`found parent: ${foundParent}`)
+                console.log(foundParent.children[0]._id)
+                let parentId = foundParent.children[0]._id;
+                let childId = childUser._id;
+                console.log(childUser._id)
+                expect(parentId).to.deep.equal(childId)
+            })
+        });
+    
+        it('should add category id to child profile', function(){
+            const testUser = {}
+            const category = {category_id: faker.random.number()}
+
+            return User
+                .findOne()
+                .then(function(user){
+                    testUser.id = user._id;
+            return chai.request(app)
+                console.log(testUser.id)
+                .put(`api/user/${testUser.id}`)
+                .send(category)
+            })
+            .then(function(res){
+                console.log(`res: ${res.status}`)
+                expect(res).to.have.status(204);
+                return User.findById(testUser.id)
+            })
+            .then(function(foundUser){
+                console.log(`foundUser: ${foundUser}`)
+                expect(foundUser.category_id).to.equal(category.category_id)
+            })
+        
+        });
+    });
 });
