@@ -130,7 +130,6 @@ describe('User endpoint', function(){
                     parentUser._id = user[0]._id;
                     childUser.username = user[1].username;
                     childUser._id = user[1]._id;
-                    console.log(`parent: ${parentUser._id} child: ${childUser.username}`)
                 return chai.request(app)
                 .put(`/api/user/child/${parentUser._id}`)
                 .send(childUser)
@@ -140,30 +139,26 @@ describe('User endpoint', function(){
                 return User.findById(parentUser._id)
             })
             .then(function(foundParent){
-                console.log(`found parent: ${foundParent}`)
-                console.log(foundParent.children[0]._id)
                 let parentId = foundParent.children[0]._id;
                 let childId = childUser._id;
-                console.log(childUser._id)
                 expect(parentId).to.deep.equal(childId)
             })
         });
     
         it('should add category id to child profile', function(){
             const testUser = {}
-            const category = {category_id: faker.random.number()}
+            const category = {category_id: faker.internet.userName()}
 
             return User
                 .findOne()
                 .then(function(user){
                     testUser.id = user._id;
-            return chai.request(app)
-                console.log(testUser.id)
-                .put(`api/user/${testUser.id}`)
+                return chai.request(app)
+                .put(`/api/user/${testUser.id}`)
                 .send(category)
             })
             .then(function(res){
-                console.log(`res: ${res.status}`)
+                console.log(`res: ${res}`)
                 expect(res).to.have.status(204);
                 return User.findById(testUser.id)
             })

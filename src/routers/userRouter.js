@@ -45,6 +45,9 @@ router.route('/protected/')
 
 router.post('/login', disableWithToken, requiredFields('username', 'password'), (req, res) => {
     User.findOne({username: req.body.username})
+        .populate('children')
+        .populate('budget')
+        .populate('goals')
     .then((foundResult) => {
         if(!foundResult){
             return res.status(400).json({
@@ -68,9 +71,12 @@ router.post('/login', disableWithToken, requiredFields('username', 'password'), 
                 username: foundUser.username,
             };
             const token = jwt.sign(tokenPayload, config.SECRET, {
-
+        
             });
-            return res.json({token: `Bearer: ${token}`});
+            return res.json({                
+                token: `Bearer: ${token}`,
+                userInfo: foundUser,                       
+                            });
         });
     })
     .catch(report => res.status(400).json(errorParser.generateErrorResponse(report)));
@@ -86,7 +92,6 @@ router.put('/child/:id', (req, res) => {
                     generalMessage:'Cannot find child account',
                 });
             }
-            console.log(`found child: ${foundChild}`)
             return foundChild;
         })
         .then((child) => {
