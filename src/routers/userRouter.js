@@ -23,8 +23,9 @@ router.route('/')
             password: req.body.password,
             username: req.body.username,
             usertype: req.body.type,
+            budget: req.body.budget,
         })
-        .then(() => res.status(201).send())
+        .then((user) => res.status(201).json(user))
         .catch(report => res.status(400).json(errorParser.generateErrorResponse(report)));
     })
     .get(passport.authenticate('jwt', {session: false}), (req, res) => {
@@ -36,12 +37,17 @@ router.route('/protected/')
        console.log(`requestion: ${req}`) 
         User.findById(req.user)
         //.then(user => console.log(`user: ${user}`))
-        //.populate('children', '_id')
+        .populate('children')
+        .populate('budget')
+        .populate('goals')
         .then(user => res.json({user}));
     })
 
 router.post('/login', disableWithToken, requiredFields('username', 'password'), (req, res) => {
     User.findOne({username: req.body.username})
+        .populate('children')
+        .populate('budget')
+        .populate('goals')
     .then((foundResult) => {
         if(!foundResult){
             return res.status(400).json({
@@ -65,15 +71,20 @@ router.post('/login', disableWithToken, requiredFields('username', 'password'), 
                 username: foundUser.username,
             };
             const token = jwt.sign(tokenPayload, config.SECRET, {
-
+        
             });
-            return res.json({token: `Bearer: ${token}`});
+            return res.json({                
+                token: `Bearer: ${token}`,
+                userInfo: foundUser,                       
+                            });
         });
     })
     .catch(report => res.status(400).json(errorParser.generateErrorResponse(report)));
 });
 
 router.put('/child/:id', (req, res) => {
+    console.log(req.params.id);
+    let parentId = req.params.id;
     User.findOne({username: req.body.username})
         .then((foundChild) => {
             if(!foundChild){
@@ -81,15 +92,44 @@ router.put('/child/:id', (req, res) => {
                     generalMessage:'Cannot find child account',
                 });
             }
-            console.log(foundChild)
             return foundChild;
         })
         .then((child) => {
-            User.findByIdAndUpdate(req.params.id, {$addToSet: {children: child}})
+            addChild(child.id, parentId )
         })
         .then(a => res.status(204).end())
         .catch(err => res.status(400).json(errorParser.generateErrorResponse(report)));
         
     });
 
+router.delete('/:id', (req, res) => {
+    User.findByIdAndRemove(req.params.id)
+    .then(() => res.status(204).end())
+})
+
+router.put('/:id', (req, res) => {
+    User.findByIdAndUpdate(req.params.id, {
+        $set: {category_id: req.body.category_id}
+    })
+    .then(a => res.status(204).end())
+    .catch(err => res.status(400).json(errorParser.generateErrorResponse(report)));
+})
+
+async function addChild(childId, parentId){
+    console.log('add child ran')
+    let parent;
+
+    try{
+        User.findByIdAndUpdate(parentId, {$addToSet: {children: childId}})
+            .then((user) => parent=user)
+    }
+    catch(e){
+        console.log(`error: ${JSON.stringify}`)
+    }
+    console.log(`parent: ${parent}`)
+    return parent;
+}
+
 module.exports = router;
+
+//User.findByIdAndUpdate(req.params.id, {$addToSet: {children: child._id}})

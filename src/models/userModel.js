@@ -12,12 +12,10 @@ const userSchema =  new mongoose.Schema({
     usertype: String,
     budget_id: String,
     category_id: String,
-    budget_amount: Number,
-    children: [{type: mongoose.Schema.Types.ObjectId, ref: 'user'}],
-    access_token: String,
-    expires_in: Number,
-    refresh_token: String,
-    created_at: Number
+    category_balance: Number,
+    children: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
+    budget: {type: mongoose.Schema.Types.ObjectId, ref: 'Account'},
+    goals: [{type: mongoose.Schema.Types.ObjectId, ref: 'Goal'}],
 })
 
 userSchema.pre('save', function userPreSave(next){

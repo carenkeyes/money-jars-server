@@ -4,6 +4,7 @@ const router = express.Router();
 const request = require('superagent');
 const refreshToken = require('../middleware/refreshToken.middleware');
 const User = require('../models/userModel');
+const Account = require('../models/ynabModel');
 const errorParser = require('../helpers/errorsParserHelper');
 
 const bodyParser = require('body-parser');
@@ -32,22 +33,15 @@ router.get('/', (req, res) => {
 });
 
 router.get('/budgets/:id', refreshToken, (req, res) => {
-
     return User
         .findById(req.params.id)
-        .then(function(user){
-            accessToken = user.access_token;
-        })
-    .then(function(){
-        return retrieveBudgets()
-    })
-    .then(function(budgets){
-        res.json(budgets);
-    })   
+        .populate('budget')
+    .then((user) => retrieveBudgets(user.budget.access_token))
+    .then((budgets) =>res.json(budgets))   
     .catch(err => res.status(400).json(errorParser.generateErrorResponse(err)))
-})
+});
 
-async function retrieveBudgets(){
+async function retrieveBudgets(accessToken){
     console.log('retrieve budgets ran');
     console.log(`accessToken: ${accessToken}`)
     const ynabAPI = new ynab.API(accessToken);
@@ -67,13 +61,15 @@ async function retrieveBudgets(){
     return budgetList
 }
 
-router.get('/categories/:id', refreshToken, (req, res) => {
+router.get('/categories/:id',  refreshToken, (req, res) => {
     budgetID = req.query.budgetid;
 
     return User
-        .findById(req.params.id)
-        .then(function(user){
-            accessToken = user.access_token;
+        .findByIdAndUpdate(req.params.id, {$set: {budget_id: budgetID}})
+        .populate('budget')
+        .then(function(account){
+            //console.log(account)
+            accessToken = account.budget.access_token;
         })
     .then(function(){
         return retrieveCategories(budgetID)
@@ -84,14 +80,17 @@ router.get('/categories/:id', refreshToken, (req, res) => {
     .catch(err => res.status(400).json(errorParser.generateErrorResponse(err)))
 })
 
+//.findByIdAndUpdate(req.params.id, {$set: {budget_id: budgetID}})
+
 async function retrieveCategories(budgetID){
     console.log(`budgetID: ${budgetID}`)
+    console.log(`accessToken: ${accessToken}`)
     const ynabAPI = new ynab.API(accessToken);
     const categoryList = []
 
     try{
         const categoryResponse = await ynabAPI.categories.getCategories(budgetID)
-        console.log(`category response: ${categoryResponse}`);
+        //console.log(`category response: ${categoryResponse}`);
         const categoryGroups = categoryResponse.data.category_groups;
         for (let categoryGroup of categoryGroups){
             let group = {
@@ -105,18 +104,22 @@ async function retrieveCategories(budgetID){
         console.log(`error: ${JSON.stringify(e)}`);
     }
 
-    console.log(`category list: ${categoryList}`)
+    //console.log(`category list: ${categoryList}`)
     return categoryList
 }
 
 router.get('/category/:id', refreshToken, (req, res) => {
-    const categoryID = req.query.categoryid;
-    const budgetID = req.query.budgetid;
+    categoryID = req.query.categoryid;
+    budgetID = req.query.budgetid;
+    console.log('Give me anything!!')
+    console.log(`catId: ${categoryID}, budId: ${budgetID}`)
 
     return User
         .findById(req.params.id)
-        .then(function(user){
-            accessToken = user.access_token;
+        .populate('budget')
+        .then(function(account){
+            accessToken = account.budget.access_token;
+            console.log(`accessToken: ${accessToken}`)
         })
     .then(function(){
         return retrieveBalance(budgetID, categoryID)
@@ -129,6 +132,7 @@ router.get('/category/:id', refreshToken, (req, res) => {
 })
 
 async function retrieveBalance(budID, catID){
+    console.log('retrieve balance ran')
     let category;
     const ynabAPI = new ynab.API(accessToken);
 
@@ -175,18 +179,33 @@ router.post('/auth', (req, res) => {
             console.log(tokenData);
             return tokenData;
         })
-        .then (function(updateUser){
-            User
-                .findByIdAndUpdate(userID, {$set: updateUser})
-                .then(updated => res.json(updated));
+        .then (function(tokenData){
+            Account.create(tokenData)               
+                .then(account => addToUser(account._id, userID));
         })
-        .catch(err => res.status(400).json(errorParser.generateErrorResponse(err)))
-    
+        .then(updated => res.json(updated))
+        .catch(err => res.status(400).json(errorParser.generateErrorResponse(err)))    
 })
+
+async function addToUser(accountId, userId){
+    let updatedUser;
+
+    try{
+        User.findByIdAndUpdate(userId, {$set: {budget: accountId}} )
+        .then((user) => updatedUser = user);
+    }
+    catch(e){
+        console.log(`error: ${JSON.stringify}`)
+    }
+    return updatedUser;
+}
 
 router.get('/test/:id', (req, res) => {
     User
         .findById(req.params.id)
+        .populate('budget')
+        .populate('children')
+        .populate('goals')
         .then(user => res.json({user}))
 })
 

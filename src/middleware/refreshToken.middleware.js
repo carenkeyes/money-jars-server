@@ -1,4 +1,5 @@
 const User = require('../models/userModel');
+const Account = require('../models/ynabModel');
 const {CLIENT_SECRET} = require('../../config');
 const request = require('superagent');
 
@@ -9,13 +10,16 @@ module.exports = (req, res, next) => {
 
     User
         .findById(userID)
+        .populate('budget')
         .then(function(user){
-            token.access_token = user.access_token
-            token.expires_in = user.expires_in
-            token.refresh_token = user.refresh_token
-            token.created_at = user.created_at
+            token.id = user.budget._id
+            token.access_token = user.budget.access_token
+            token.expires_in = user.budget.expires_in
+            token.refresh_token = user.budget.refresh_token
+            token.created_at = user.budget.created_at
         })
     .then((user) => {
+        console.log(`token.id: ${token.id}`)
         if(!token.access_token){
             const message = 'You must obtain an access token first';
             return res.status(400).json({
@@ -35,6 +39,7 @@ module.exports = (req, res, next) => {
             })
             .then(function(response){
                 const data = JSON.parse(response.text);
+                console.log(`data: ${data}`)
                 const tokenData = {
                     access_token: data.access_token,
                     expires_in: data.expires_in,
@@ -44,10 +49,12 @@ module.exports = (req, res, next) => {
                 console.log(tokenData);
                 return tokenData;
             })
-            .then (function(updateUser){
-                console.log(`new token: ${updateUser}`)
-                User
-                    .findByIdAndUpdate(userID, {$set: updateUser})
+            .then (function(updateAccount){
+                console.log(`new token: ${updateAccount.access_token}`)
+                console.log(`token.id: ${token.id}`)
+                Account
+                    .findByIdAndUpdate(token.id, {$set: updateAccount})
+                    .then(account => console.log(`account: ${account}`))
             })
             .catch(function(err){
                 console.log(err.message)
