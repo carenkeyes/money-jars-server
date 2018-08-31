@@ -10,13 +10,13 @@ module.exports = (req, res, next) => {
 
     User
         .findById(userID)
-        .populate('budget')
+        .populate('account')
         .then(function(user){
-            token.id = user.budget._id
-            token.access_token = user.budget.access_token
-            token.expires_in = user.budget.expires_in
-            token.refresh_token = user.budget.refresh_token
-            token.created_at = user.budget.created_at
+            token.id = user.account._id
+            token.access_token = user.account.access_token
+            token.expires_in = user.account.expires_in
+            token.refresh_token = user.account.refresh_token
+            token.created_at = user.account.created_at
         })
     .then((user) => {
         console.log(`token.id: ${token.id}`)

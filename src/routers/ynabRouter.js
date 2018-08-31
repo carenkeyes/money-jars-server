@@ -35,8 +35,8 @@ router.get('/', (req, res) => {
 router.get('/budgets/:id', refreshToken, (req, res) => {
     return User
         .findById(req.params.id)
-        .populate('budget')
-    .then((user) => retrieveBudgets(user.budget.access_token))
+        .populate('account')
+    .then((user) => retrieveBudgets(user.account.access_token))
     .then((budgets) =>res.json(budgets))   
     .catch(err => res.status(400).json(errorParser.generateErrorResponse(err)))
 });
@@ -66,10 +66,10 @@ router.get('/categories/:id',  refreshToken, (req, res) => {
 
     return User
         .findByIdAndUpdate(req.params.id, {$set: {budget_id: budgetID}})
-        .populate('budget')
+        .populate('account')
         .then(function(account){
             //console.log(account)
-            accessToken = account.budget.access_token;
+            accessToken = account.account.access_token;
         })
     .then(function(){
         return retrieveCategories(budgetID)
@@ -111,14 +111,12 @@ async function retrieveCategories(budgetID){
 router.get('/category/:id', refreshToken, (req, res) => {
     categoryID = req.query.categoryid;
     budgetID = req.query.budgetid;
-    console.log('Give me anything!!')
-    console.log(`catId: ${categoryID}, budId: ${budgetID}`)
 
     return User
         .findById(req.params.id)
-        .populate('budget')
+        .populate('account')
         .then(function(account){
-            accessToken = account.budget.access_token;
+            accessToken = account.account.access_token;
             console.log(`accessToken: ${accessToken}`)
         })
     .then(function(){
@@ -156,8 +154,9 @@ async function retrieveBalance(budID, catID){
 //get the access token 
 //They are two steps currently because of development limitations
 router.post('/auth', (req, res) => {
-    const userID = req.query.id; 
+    const userID = req.query.state; 
     const code = req.query.code;
+    const accountId = {}
 
     request
         .post('https://app.youneedabudget.com/oauth/token')
@@ -191,7 +190,7 @@ async function addToUser(accountId, userId){
     let updatedUser;
 
     try{
-        User.findByIdAndUpdate(userId, {$set: {budget: accountId}} )
+        User.findByIdAndUpdate(userId, {$set: {account: accountId}} )
         .then((user) => updatedUser = user);
     }
     catch(e){
@@ -203,7 +202,7 @@ async function addToUser(accountId, userId){
 router.get('/test/:id', (req, res) => {
     User
         .findById(req.params.id)
-        .populate('budget')
+        .populate('account')
         .populate('children')
         .populate('goals')
         .then(user => res.json({user}))

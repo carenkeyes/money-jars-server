@@ -23,9 +23,13 @@ router.route('/')
             password: req.body.password,
             username: req.body.username,
             usertype: req.body.type,
-            budget: req.body.budget,
+            account: req.body.account,
         })
-        .then((user) => res.status(201).json(user))
+        .then((user) => res.status(201).json({
+            _id: user._id,
+            username: user.username,
+            usertype: user.usertype,
+        }))
         .catch(report => res.status(400).json(errorParser.generateErrorResponse(report)));
     })
     .get(passport.authenticate('jwt', {session: false}), (req, res) => {
@@ -38,7 +42,7 @@ router.route('/protected/')
         User.findById(req.user)
         //.then(user => console.log(`user: ${user}`))
         .populate('children')
-        .populate('budget')
+        .populate('account')
         .populate('goals')
         .then(user => res.json({user}));
     })
@@ -46,7 +50,7 @@ router.route('/protected/')
 router.post('/login', disableWithToken, requiredFields('username', 'password'), (req, res) => {
     User.findOne({username: req.body.username})
         .populate('children')
-        .populate('budget')
+        .populate('account')
         .populate('goals')
     .then((foundResult) => {
         if(!foundResult){
@@ -76,7 +80,7 @@ router.post('/login', disableWithToken, requiredFields('username', 'password'), 
             return res.json({                
                 token: `Bearer: ${token}`,
                 userInfo: foundUser,                       
-                            });
+                });
         });
     })
     .catch(report => res.status(400).json(errorParser.generateErrorResponse(report)));
