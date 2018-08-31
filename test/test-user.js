@@ -106,17 +106,12 @@ describe('User endpoint', function(){
                 .then(function(res){
                     expect(res).to.have.status(201);
                     expect(res).to.be.json;
-                    expect(res.body).to.include.keys('_id', 'username', 'email');
-                    expect(res.body.username).to.equal(newUser.username);
-                    expect(res.body.email).to.equal(newUser.email.toLowerCase());
                     return User.findById(res.body._id);
                 })
                 .then(function(foundUser){
                     expect(foundUser.username).to.equal(newUser.username);
                 });
-        }); 
-        
-        
+        });               
     });
 
     describe('PUT endpoint', function(){
