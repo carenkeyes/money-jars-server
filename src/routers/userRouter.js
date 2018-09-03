@@ -43,16 +43,24 @@ router.route('/protected/')
        console.log(`requestion: ${req}`) 
         User.findById(req.user)
         //.then(user => console.log(`user: ${user}`))
-        .populate('children')
-        .populate('account')
+        .populate('children', ('username', 'category_balance', '_id', 'goals'))
         .populate('goals')
-        .then(user => res.json({user}));
+        .then(user => res.json({
+            _id: user._id,
+            username: user.username,
+            usertype: user.usertype,
+            budget_id: user.budget_id,
+            category__id: user.category__id,
+            category_balance: user.category_balance,
+            children: user.children,
+            goals: user.goals,
+            setupComplete: user.setupComplete,
+        }));
     })
 
 router.post('/login', disableWithToken, requiredFields('username', 'password'), (req, res) => {
     User.findOne({username: req.body.username})
         .populate('children')
-        .populate('account')
         .populate('goals')
     .then((foundResult) => {
         if(!foundResult){
@@ -81,8 +89,17 @@ router.post('/login', disableWithToken, requiredFields('username', 'password'), 
             });
             return res.json({                
                 token: `Bearer: ${token}`,
-                userInfo: foundUser,                       
-                });
+                userInfo: {
+                    _id: foundUser._id,
+                    username: foundUser.username,
+                    usertype: foundUser.usertype,
+                    budget_id: foundUser.budget_id,
+                    category__id: foundUser.category__id,
+                    category_balance: foundUser.category_balance,
+                    children: foundUser.children,
+                    goals: foundUser.goals,
+                    setupComplete: foundUser.setupComplete,                       
+                }});
         });
     })
     .catch(report => res.status(400).json(errorParser.generateErrorResponse(report)));
