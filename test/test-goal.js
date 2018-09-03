@@ -87,7 +87,7 @@ describe('Goal endpoint', function(){
         })
     })
 
-    describe('POST endpoint', function(){
+   /* describe('POST endpoint', function(){
 
         it('should add a new goal', function(){
             const newGoal = generateGoalData();
@@ -100,7 +100,7 @@ describe('Goal endpoint', function(){
                     expect(res).to.have.status(201);
                 })
         })
-    })
+    })*/
 
     describe('PUT endpoint', function(){
         it('should update amount saved and withdrawal request', function(){

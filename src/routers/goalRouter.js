@@ -11,7 +11,7 @@ const app = express();
 
 app.use(morgan('common'));
 
-/*router.route('/')
+router.route('/')
     .post((req, res) => {
         console.log(req);
         let userId = req.body.userId
@@ -44,7 +44,7 @@ app.use(morgan('common'));
         }
         return 
     }
-*/
+
     router.route('/:id')
         .get((req, res) => {
             Goal.findById(req.params.id)
