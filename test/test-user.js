@@ -140,9 +140,13 @@ describe('User endpoint', function(){
             })
         });
     
-        it('should add category id to child profile', function(){
+        it('should update user profile', function(){
             const testUser = {}
-            const category = {category_id: faker.internet.userName()}
+            const category = {
+                data: {
+                    category_id: faker.random.word()
+                }
+            }
 
             return User
                 .findOne()
@@ -159,7 +163,7 @@ describe('User endpoint', function(){
             })
             .then(function(foundUser){
                 console.log(`foundUser: ${foundUser}`)
-                expect(foundUser.category_id).to.equal(category.category_id)
+                expect(foundUser.category_id).to.equal(category.data.category_id)
             })
         
         });
