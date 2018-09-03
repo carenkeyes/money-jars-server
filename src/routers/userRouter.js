@@ -46,15 +46,17 @@ router.route('/protected/')
         .populate('children', ('username', 'category_balance', '_id', 'goals'))
         .populate('goals')
         .then(user => res.json({
-            _id: user._id,
-            username: user.username,
-            usertype: user.usertype,
-            budget_id: user.budget_id,
-            category__id: user.category__id,
-            category_balance: user.category_balance,
-            children: user.children,
-            goals: user.goals,
-            setupComplete: user.setupComplete,
+            user: {
+                _id: user._id,
+                username: user.username,
+                usertype: user.usertype,
+                budget_id: user.budget_id,
+                category__id: user.category__id,
+                category_balance: user.category_balance,
+                children: user.children,
+                goals: user.goals,
+                setupComplete: user.setupComplete,
+            }
         }));
     })
 
