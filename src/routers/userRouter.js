@@ -24,6 +24,8 @@ router.route('/')
             username: req.body.username,
             usertype: req.body.type,
             account: req.body.account,
+            budget_id: req.body.budget_id,
+            category_id: req.body.category_id,
         })
         .then((user) => res.status(201).json({
             _id: user._id,
@@ -113,7 +115,11 @@ router.delete('/:id', (req, res) => {
 
 router.put('/:id', (req, res) => {
     User.findByIdAndUpdate(req.params.id, {
-        $set: {category_id: req.body.category_id}
+        $set: {
+            category_id: req.body.data.category_id,
+            budget_id: req.body.data.budget_id,
+            setupComplete: req.body.data.setupComplete,
+            }
     })
     .then(a => res.status(204).end())
     .catch(err => res.status(400).json(errorParser.generateErrorResponse(report)));

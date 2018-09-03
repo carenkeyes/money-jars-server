@@ -51,13 +51,14 @@ async function retrieveBudgets(accessToken){
         const budgetsResponse = await ynabAPI.budgets.getBudgets();
         const budgets = budgetsResponse.data.budgets;
         for (let budget of budgets){
-            budgetList.push(`[name: ${budget.name}, [id: ${budget.id}]`)
+            budgetList.push({label: budget.name,
+                             value: budget.id})
         }
     } catch (e) {
         console.log(`error: ${JSON.stringify(e)}`);
     }
 
-    console.log(`budget list: ${budgetList}`)
+    console.log(`budget list: ${budgetList[0].label}`)
     return budgetList
 }
 

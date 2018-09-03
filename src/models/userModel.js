@@ -16,6 +16,7 @@ const userSchema =  new mongoose.Schema({
     children: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
     account: {type: mongoose.Schema.Types.ObjectId, ref: 'Account'},
     goals: [{type: mongoose.Schema.Types.ObjectId, ref: 'Goal'}],
+    setupComplete: Boolean,
 })
 
 userSchema.pre('save', function userPreSave(next){
