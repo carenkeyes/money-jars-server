@@ -11,18 +11,21 @@ const app = express();
 
 app.use(morgan('common'));
 
-router.route('/')
-    .post(requiredFields('title', 'goal_amount', 'category'), (req, res) => {
-        let userId = req.body.userId;
+/*router.route('/')
+    .post((req, res) => {
+        console.log(req);
+        let userId = req.body.userId
         Goal.create({
-            title: req.body.title,
-            category: req.body.category,
-            goal_amount: req.body.goal_amount,
+            title: req.body.goal.title,
+            category: req.body.goal.category,
+            goal_amount: req.body.goal.amount,
             saved_amount: 0,
-            goal_image: req.body.goal_image,
+            goal_image: req.body.goal.imageurl,
         })
-        .then(newGoal => addToUser(newGoal._id, userId))
-        .then(() => res.status(201).send())
+        .then(newGoal => {
+            addToUser(newGoal._id, userId)
+        })
+        .then(() => res.status(201).send)
         .catch(report => res.status(400).json(errorParser.generateErrorResponse(report)))
     })
     .get((req, res) => {
@@ -41,7 +44,7 @@ router.route('/')
         }
         return 
     }
-
+*/
     router.route('/:id')
         .get((req, res) => {
             Goal.findById(req.params.id)

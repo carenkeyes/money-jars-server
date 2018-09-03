@@ -44,6 +44,7 @@ router.route('/protected/')
         User.findById(req.user)
         //.then(user => console.log(`user: ${user}`))
         .populate('children', ('username', 'category_balance', '_id', 'goals'))
+        .populate('account', 'created_at')
         .populate('goals')
         .then(user => res.json({
             user: {
@@ -56,6 +57,7 @@ router.route('/protected/')
                 children: user.children,
                 goals: user.goals,
                 setupComplete: user.setupComplete,
+                account: user.account,
             }
         }));
     })
@@ -64,6 +66,7 @@ router.post('/login', disableWithToken, requiredFields('username', 'password'), 
     User.findOne({username: req.body.username})
         .populate('children')
         .populate('goals')
+        .populate('account', 'created_at')
     .then((foundResult) => {
         if(!foundResult){
             return res.status(400).json({
@@ -99,8 +102,8 @@ router.post('/login', disableWithToken, requiredFields('username', 'password'), 
                     category__id: foundUser.category__id,
                     category_balance: foundUser.category_balance,
                     children: foundUser.children,
-                    goals: foundUser.goals,
-                    setupComplete: foundUser.setupComplete,                       
+                    setupComplete: foundUser.setupComplete,
+                    goals: foundUser.goals                       
                 }});
         });
     })
