@@ -64,7 +64,6 @@ router.route('/protected/')
 router.post('/login', disableWithToken, requiredFields('username', 'password'), (req, res) => {
     User.findOne({username: req.body.username})
         .populate('children')
-        .populate('goals')
     .then((foundResult) => {
         if(!foundResult){
             return res.status(400).json({

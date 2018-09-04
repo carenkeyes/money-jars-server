@@ -13,7 +13,6 @@ app.use(morgan('common'));
 
 router.route('/')
     .post((req, res) => {
-        console.log(req);
         let userId = req.body.userId
         Goal.create({
             title: req.body.goal.title,
@@ -22,10 +21,12 @@ router.route('/')
             saved_amount: 0,
             goal_image: req.body.goal.imageurl,
         })
-        .then(newGoal => {
-            addToUser(newGoal._id, userId)
+        .then(function(newGoal){
+           let goal = addToUser(newGoal._id, userId)
+           console.log(`goal: ${goal}`)
+           return goal;
         })
-        .then(() => res.status(201).send)
+        .then((goal) => {console.log(goal); res.status(201).json({goal})})
         .catch(report => res.status(400).json(errorParser.generateErrorResponse(report)))
     })
     .get((req, res) => {
@@ -33,16 +34,15 @@ router.route('/')
         .then(goals => res.json(goals));
     })
 
-    async function addToUser(goalId, userId){
-        console.log(`goal: ${goalId}, user: ${userId}`)
-        try{
-            User.findByIdAndUpdate(userId, {$addToSet: {goals: goalId}})
-            .then(user => console.log(user));
-        }
-        catch(e){
-            console.log(`error: ${JSON.stringify}`)
-        }
-        return 
+function addToUser(goalId, userId){
+    console.log(`userId: ${userId}`)
+    console.log('new user ran')
+        User.findByIdAndUpdate(userId, {$addToSet: {goals: goalId}})
+        let foundUser = User.findById(userId)
+        console.log(`foundUser: ${foundUser}`)
+        let newGoal = Goal.findById(goalId)
+    console.log(`newGoal: ${newGoal}`)
+        return foundUser
     }
 
     router.route('/:id')
