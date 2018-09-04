@@ -130,7 +130,7 @@ describe('User endpoint', function(){
                 .send(childUser)
                 })
             .then(function(res){
-                expect(res).to.have.status(204);
+                expect(res).to.have.status(201);
                 return User.findById(parentUser._id)
             })
             .then(function(foundParent){
