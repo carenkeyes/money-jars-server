@@ -110,18 +110,18 @@ async function retrieveCategories(budgetID){
 }
 
 router.get('/category/:id', refreshToken, (req, res) => {
-    categoryID = req.query.categoryid;
-    budgetID = req.query.budgetid;
-
+    console.log('req.params.id')
     return User
         .findById(req.params.id)
         .populate('account')
-        .then(function(account){
-            accessToken = account.account.access_token;
+        /*.then(function(user){
+            accessToken = user.account.access_token;
+            budgetId = user.budget.budget_id,
+            categoryId = user.budget.category_id,
             console.log(`accessToken: ${accessToken}`)
-        })
-    .then(function(){
-        return retrieveBalance(budgetID, categoryID)
+        })*/
+    .then(function(user){
+        return retrieveBalance(user)
     })
     .then(function(balance){
         res.json(balance);
@@ -130,16 +130,22 @@ router.get('/category/:id', refreshToken, (req, res) => {
 
 })
 
-async function retrieveBalance(budID, catID){
+async function retrieveBalance(user){
     console.log('retrieve balance ran')
-    let category;
+    let accessToken = user.account.access_token;
+    let budID = user.budget_id;
+    let catID = user.category_id;
+
+    console.log(`accessToken: ${accessToken}`)
+    console.log(`budID: ${budID}`)
+    console.log(`catID: ${catID}`)
     const ynabAPI = new ynab.API(accessToken);
 
     try{
         const singleCategory = await ynabAPI.categories
         .getCategoryById(budID, catID)
         .then(response => {
-            category = response.data.category;    
+            category = response.data.category.balance;    
         })
     }
     catch (e) {

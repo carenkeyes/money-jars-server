@@ -44,7 +44,6 @@ router.route('/protected/')
         User.findById(req.user)
         //.then(user => console.log(`user: ${user}`))
         .populate('children', ('username', 'category_balance', '_id', 'goals'))
-        .populate('account', 'created_at')
         .populate('goals')
         .then(user => res.json({
             user: {
@@ -52,7 +51,7 @@ router.route('/protected/')
                 username: user.username,
                 usertype: user.usertype,
                 budget_id: user.budget_id,
-                category__id: user.category__id,
+                category_id: user.category_id,
                 category_balance: user.category_balance,
                 children: user.children,
                 goals: user.goals,
@@ -66,7 +65,6 @@ router.post('/login', disableWithToken, requiredFields('username', 'password'), 
     User.findOne({username: req.body.username})
         .populate('children')
         .populate('goals')
-        .populate('account', 'created_at')
     .then((foundResult) => {
         if(!foundResult){
             return res.status(400).json({
@@ -99,9 +97,10 @@ router.post('/login', disableWithToken, requiredFields('username', 'password'), 
                     username: foundUser.username,
                     usertype: foundUser.usertype,
                     budget_id: foundUser.budget_id,
-                    category__id: foundUser.category__id,
+                    category__id: foundUser.category_id,
                     category_balance: foundUser.category_balance,
                     children: foundUser.children,
+                    account: foundUser.account,
                     setupComplete: foundUser.setupComplete,
                     goals: foundUser.goals                       
                 }});
@@ -136,16 +135,23 @@ router.delete('/:id', (req, res) => {
 })
 
 router.put('/:id', (req, res) => {
-    User.findByIdAndUpdate(req.params.id, {
+    let UserId = req.params.id;
+    let data = req.body.data;
+    return User.findByIdAndUpdate(req.params.id, {
         $set: {
             category_id: req.body.data.category_id,
             budget_id: req.body.data.budget_id,
             setupComplete: req.body.data.setupComplete,
             }
     })
-    .then(a => res.status(204).end())
+    .then(User.findById(UserId)
+        .populate('children', ('username', 'category_balance', '_id', 'goals'))
+        .populate('goals'))        
+    .then(updatedUser => res.status(201).json({updatedUser}))
     .catch(err => res.status(400).json(errorParser.generateErrorResponse(report)));
 })
+
+
 
 async function addChild(childId, parentId){
     console.log('add child ran')
