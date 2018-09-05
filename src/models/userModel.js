@@ -12,7 +12,7 @@ const userSchema =  new mongoose.Schema({
     usertype: String,
     budget_id: String,
     category_id: String,
-    category_balance: Number,
+    balance: Number,
     children: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}],
     account: {type: mongoose.Schema.Types.ObjectId, ref: 'Account'},
     goals: [{type: mongoose.Schema.Types.ObjectId, ref: 'Goal'}],

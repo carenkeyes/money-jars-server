@@ -17,15 +17,16 @@ const app = express();
 app.use(morgan('common'));
 
 router.route('/')
-    .post(disableWithToken, requiredFields('username', 'password'), (req, res) => {
+    .post(disableWithToken, requiredFields('user'), (req, res) => {
         User.create({
-            email: req.body.email,
-            password: req.body.password,
-            username: req.body.username,
-            usertype: req.body.type,
-            account: req.body.account,
-            budget_id: req.body.budget_id,
-            category_id: req.body.category_id,
+            email: req.body.user.email,
+            password: req.body.user.password,
+            username: req.body.user.username,
+            usertype: req.body.user.type,
+            account: req.body.user.account,
+            budget_id: req.body.user.budget_id,
+            category_id: req.body.user.category_id,
+            balance: req.body.user.balance,
         })
         .then((user) => res.status(201).json({
             _id: user._id,
@@ -51,8 +52,8 @@ router.route('/protected/')
                 username: user.username,
                 usertype: user.usertype,
                 budget_id: user.budget_id,
-                category_id: user.category_id,
-                category_balance: user.category_balance,
+                //category_id: user.category_id,
+                balance: user.balance,
                 children: user.children,
                 goals: user.goals,
                 setupComplete: user.setupComplete,
@@ -64,6 +65,7 @@ router.route('/protected/')
 router.post('/login', disableWithToken, requiredFields('username', 'password'), (req, res) => {
     User.findOne({username: req.body.username})
         .populate('children')
+        //.populate('goals')
     .then((foundResult) => {
         if(!foundResult){
             return res.status(400).json({
@@ -97,7 +99,7 @@ router.post('/login', disableWithToken, requiredFields('username', 'password'), 
                     usertype: foundUser.usertype,
                     budget_id: foundUser.budget_id,
                     category__id: foundUser.category_id,
-                    category_balance: foundUser.category_balance,
+                    balance: foundUser.balance,
                     children: foundUser.children,
                     account: foundUser.account,
                     setupComplete: foundUser.setupComplete,
@@ -141,6 +143,7 @@ router.put('/:id', (req, res) => {
             category_id: req.body.data.category_id,
             budget_id: req.body.data.budget_id,
             setupComplete: req.body.data.setupComplete,
+            balance: req.body.data.balance,
             }
     })
     .then(User.findById(UserId)
