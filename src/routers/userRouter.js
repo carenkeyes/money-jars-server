@@ -125,7 +125,7 @@ router.put('/child/:id', (req, res) => {
         .then((child) => {
             addChild(child.id, parentId )
         })
-        .then(a => res.status(204).end())
+        .then(a => res.status(201).end())
         .catch(err => res.status(400).json(errorParser.generateErrorResponse(report)));
         
     });

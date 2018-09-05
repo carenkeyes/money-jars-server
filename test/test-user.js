@@ -98,7 +98,8 @@ describe('User endpoint', function(){
     describe('POST endpoint', function(){
 
         it('should add a new user', function(){
-            const newUser = generateUserData();
+            const newUser = {user: generateUserData()};
+            console.log(`newUser: ${newUser}`)
 
             return chai.request(app)
                 .post('/api/user')
@@ -109,7 +110,7 @@ describe('User endpoint', function(){
                     return User.findById(res.body._id);
                 })
                 .then(function(foundUser){
-                    expect(foundUser.username).to.equal(newUser.username);
+                    expect(foundUser.username).to.equal(newUser.user.username);
                 });
         });               
     });
@@ -157,12 +158,10 @@ describe('User endpoint', function(){
                 .send(category)
             })
             .then(function(res){
-                console.log(`res: ${res}`)
-                expect(res).to.have.status(204);
+                expect(res).to.have.status(201);
                 return User.findById(testUser.id)
             })
             .then(function(foundUser){
-                console.log(`foundUser: ${foundUser}`)
                 expect(foundUser.category_id).to.equal(category.data.category_id)
             })
         
