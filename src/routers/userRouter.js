@@ -64,8 +64,8 @@ router.route('/protected/')
 
 router.post('/login', disableWithToken, requiredFields('username', 'password'), (req, res) => {
     User.findOne({username: req.body.username})
-        .populate('children')
-        //.populate('goals')
+        .populate('children', ('username', 'category_balance', '_id', 'goals'))
+        .populate('goals')
     .then((foundResult) => {
         if(!foundResult){
             return res.status(400).json({
@@ -130,30 +130,6 @@ router.put('/child/:id', (req, res) => {
         
     });
 
-router.delete('/:id', (req, res) => {
-    User.findByIdAndRemove(req.params.id)
-    .then(() => res.status(204).end())
-})
-
-router.put('/:id', (req, res) => {
-    let UserId = req.params.id;
-    let data = req.body.data;
-    return User.findByIdAndUpdate(req.params.id, {
-        $set: {
-            category_id: req.body.data.category_id,
-            budget_id: req.body.data.budget_id,
-            setupComplete: req.body.data.setupComplete,
-            balance: req.body.data.balance,
-            }
-    })
-    .then(User.findById(UserId)
-        .populate('children', ('username', 'category_balance', '_id', 'goals'))
-        .populate('goals'))        
-    .then(updatedUser => res.status(201).json({updatedUser}))
-    .catch(err => res.status(400).json(errorParser.generateErrorResponse(report)));
-})
-
-
 
 async function addChild(childId, parentId){
     console.log('add child ran')
@@ -170,6 +146,51 @@ async function addChild(childId, parentId){
     return parent;
 }
 
+
+
+router.delete('/:id', (req, res) => {
+    User.findByIdAndRemove(req.params.id)
+    .then(() => res.status(204).end())
+})
+
+router.put('/:id', (req, res) => {
+    let UserId = req.params.id;
+    let data = req.body.data;
+    return User.findByIdAndUpdate(req.params.id, {
+        $set: {
+            category_id: req.body.data.category_id,
+            budget_id: req.body.data.budget_id,
+            setupComplete: req.body.data.setupComplete,
+            balance: req.body.data.balance,
+            }
+    })
+    .then(function(){
+        let updatedUser = getUpdatedUser(UserId)
+        return updatedUser
+    }) 
+    .then(updatedUser => res.status(201).json({updatedUser}))
+    .catch(err => res.status(400).json(errorParser.generateErrorResponse(err)));
+})
+
+async function getUpdatedUser(userId){
+    const updatedUser = {}
+    try{
+        const foundUser = await User
+            .findById(userId)
+            .populate('children', ('username', 'category_balance', '_id', 'goals'))
+            .populate('goals')
+        updatedUser.data = foundUser;
+        console.log(`foundUser: ${foundUser}`)
+        console.log(`updatedUser: ${updatedUser}`)
+    }
+    catch(err){
+        console.log(`error: ${JSON.stringify(err)}`)
+    }
+    return updatedUser.data
+}
+
 module.exports = router;
+
+
 
 //User.findByIdAndUpdate(req.params.id, {$addToSet: {children: child._id}})

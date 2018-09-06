@@ -87,20 +87,22 @@ describe('Goal endpoint', function(){
         })
     })
 
-   /* describe('POST endpoint', function(){
+   describe('POST endpoint', function(){
 
         it('should add a new goal', function(){
             const newGoal = generateGoalData();
+            const testGoal = {goal: newGoal}
+            console.log(testGoal);
 
             return chai.request(app)
                 .post('/api/goal')
-                .send(newGoal)
+                .send(testGoal)
                 .then(function(res){
                     console.log(`new goal response: ${res}`)
                     expect(res).to.have.status(201);
                 })
         })
-    })*/
+    })
 
     describe('PUT endpoint', function(){
         it('should update amount saved and withdrawal request', function(){
@@ -120,7 +122,7 @@ describe('Goal endpoint', function(){
                     .send(updateGoal)
             })
             .then(function(res){
-                expect(res).to.have.status(204);
+                expect(res).to.have.status(201);
                 return Goal.findById(updateGoal._id);
             })    
             .then(function(foundGoal){

@@ -54,12 +54,17 @@ router.route('/:id')
         .catch(report => res.status(400).json(errorParser.generateErrorResponse(report)))
     })
     .put((req, res) => {
+        userId = req.body.userId
         Goal.findByIdAndUpdate(req.params.id,
             {
                 $inc: {saved_amount: req.body.change},
                 $set: {withdraw_request: req.body.request}
             }
-        ).then(() => res.status(204).send())
+        ).then(function(){
+            let updatedGoals = getUpdatedGoals(userId)
+            return updatedGoals
+        })
+        .then((goals) => res.status(201).send(goals))
         .catch(report => res.status(400).json(errorParser.generateErrorResponse(report)))
     })
     .delete((req, res) => {
@@ -97,6 +102,7 @@ async function getUpdatedGoals(userId){
     try{
         const foundUser = await User.findById(userId).populate('goals')
         console.log(`foundUser: ${foundUser}`)
+        console.log(`found user goals: ${foundUser.goals}`)
         updatedGoals.goals = foundUser.goals
         console.log(`updatedGoals: ${updatedGoals}`)
     }
@@ -106,11 +112,11 @@ async function getUpdatedGoals(userId){
     return updatedGoals.goals
 }
 
-        router.route('/request/:id')
-            .put((req, res) => {
-                Goal.findByIdAndUpdate(req.params.id, {$unset: {withdraw_request: ''}})
-                .then(() => res.status(204).end())
-            })
+router.route('/request/:id')
+    .put((req, res) => {
+        Goal.findByIdAndUpdate(req.params.id, {$unset: {withdraw_request: ''}})
+        .then(() => res.status(204).end())
+    })
             
 
 module.exports = router;
