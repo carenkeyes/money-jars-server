@@ -164,6 +164,8 @@ router.post('/auth', (req, res) => {
     const userID = req.query.state; 
     const code = req.query.code;
     const accountId = {}
+    console.log(userID)
+    console.log(code)
 
     request
         .post('https://app.youneedabudget.com/oauth/token')
@@ -186,33 +188,56 @@ router.post('/auth', (req, res) => {
             return tokenData;
         })
         .then (function(tokenData){
-            Account.create(tokenData)               
-                .then(account => addToUser(account._id, userID));
+            let newAccount = Account.create(tokenData)               
+            console.log(`newAccount: ${newAccount}`)
+            return newAccount
         })
-        .then(updated => res.json(updated))
+        .then(function(newAccount, userId){
+            addToUser(newAccount._id, userId)
+            console.log(`second new account: ${newAccount}`)
+            return newAccount.access_token
+        })
+        .then(function(token){
+            console.log(`token: ${token}`)
+            let budgetList = retrieveBudgets(token)
+            return budgetList
+        })
+        .then(budgets => res.json(budgets))
         .catch(err => res.status(400).json(errorParser.generateErrorResponse(err)))    
 })
 
 async function addToUser(accountId, userId){
-    let updatedUser;
+    const updatedUser = {}
 
     try{
         User.findByIdAndUpdate(userId, {$set: {account: accountId}} )
-        .then((user) => updatedUser = user);
+        .then((user) => updatedUser.data = user);
     }
     catch(e){
         console.log(`error: ${JSON.stringify}`)
     }
-    return updatedUser;
+    return updatedUser.data;
 }
 
-router.get('/test/:id', (req, res) => {
-    User
-        .findById(req.params.id)
-        .populate('account')
-        .populate('children')
-        .populate('goals')
-        .then(user => res.json({user}))
-})
+async function retrieveBudgets(accessToken){
+    console.log('retrieve budgets ran');
+    console.log(`accessToken: ${accessToken}`)
+    const ynabAPI = new ynab.API(accessToken);
+    const budgetList = []
+
+    try{
+        const budgetsResponse = await ynabAPI.budgets.getBudgets();
+        const budgets = budgetsResponse.data.budgets;
+        for (let budget of budgets){
+            budgetList.push({label: budget.name,
+                             value: budget.id})
+        }
+    } catch (e) {
+        console.log(`error: ${JSON.stringify(e)}`);
+    }
+
+    console.log(`budget list: ${budgetList[0].label}`)
+    return budgetList
+}
 
 module.exports = router;

@@ -3,7 +3,6 @@ const morgan = require('morgan');
 const Goal = require('../models/goalModel');
 const User = require('../models/userModel');
 const errorParser = require('../helpers/errorsParserHelper');
-const requiredFields = require('../middleware/requiredFields.middleware');
 
 const router = express.Router();
 
@@ -25,7 +24,7 @@ router.route('/')
            let goal = addToUser(newGoal._id, userId)
            return goal;
         })
-        .then((goal) => {console.log(`goal: ${goal}`); res.status(201).json({goal})})
+        .then((goal) => {res.status(201).json({goal})})
         .catch(report => res.status(400).json(errorParser.generateErrorResponse(report)))
     })
     .get((req, res) => {
@@ -48,7 +47,6 @@ async function addToUser(goalId, userId){
 
 router.route('/:id')
     .get((req, res) => {
-        console.log(`userId: ${req.query.userid}`)
         Goal.findById(req.params.id)
         .then(goal => res.json(goal))
         .catch(report => res.status(400).json(errorParser.generateErrorResponse(report)))
@@ -68,8 +66,6 @@ router.route('/:id')
         .catch(report => res.status(400).json(errorParser.generateErrorResponse(report)))
     })
     .delete((req, res) => {
-        console.log(`goalId: ${req.params.id}`)
-        console.log(`userId: ${req.query.userid}`)
         let userId = req.query.userid;
         let goalId = req.params.id
         Goal.findByIdAndRemove(goalId)
@@ -81,14 +77,12 @@ router.route('/:id')
     });
 
 async function removeGoalFromUser(userId, goalId){
-    console.log('remove goal')
     const updatedGoals = []
     try{
         const foundUser = await User.findByIdAndUpdate(userId, {$pull: {goals: goalId}}).populate('goals')
         for(let i=0; i<foundUser.goals.length; i++){
             updatedGoals.push(foundUser.goals[i])
         }
-        console.log(updatedGoals)
     }
     catch(err){
         console.log(`error: ${JSON.stringify(err)}`)
@@ -97,19 +91,15 @@ async function removeGoalFromUser(userId, goalId){
 }
 
 async function getUpdatedGoals(userId){
-    console.log('updated goals')
     const updatedGoals = {}
     try{
         const foundUser = await User.findById(userId).populate('goals')
-        console.log(`foundUser: ${foundUser}`)
-        console.log(`found user goals: ${foundUser.goals}`)
         updatedGoals.goals = foundUser.goals
-        console.log(`updatedGoals: ${updatedGoals}`)
     }
     catch(err){
         console.log(`error: ${JSON.stringify(err)}`)
     }
-    return updatedGoals.goals
+    return updatedGoals
 }
 
 router.route('/request/:id')

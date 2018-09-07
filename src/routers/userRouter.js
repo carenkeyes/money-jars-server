@@ -133,17 +133,18 @@ router.put('/child/:id', (req, res) => {
 
 async function addChild(childId, parentId){
     console.log('add child ran')
-    let parent;
+    const parent = {};
 
     try{
         User.findByIdAndUpdate(parentId, {$addToSet: {children: childId}})
-            .then((user) => parent=user)
+            .populate('children', ('username', 'category_balance', '_id', 'goals'))
+            .then((user) => parent.data=user)
     }
     catch(e){
         console.log(`error: ${JSON.stringify}`)
     }
-    console.log(`parent: ${parent}`)
-    return parent;
+    console.log(`parent: ${parent.data}`)
+    return parent.data;
 }
 
 
@@ -156,13 +157,32 @@ router.delete('/:id', (req, res) => {
 router.put('/:id', (req, res) => {
     let UserId = req.params.id;
     let data = req.body.data;
+
+    console.log(data)
     return User.findByIdAndUpdate(req.params.id, {
         $set: {
             category_id: req.body.data.category_id,
             budget_id: req.body.data.budget_id,
             setupComplete: req.body.data.setupComplete,
-            balance: req.body.data.balance,
-            }
+            account: req.body.data.account,
+            },
+        //$inc: {balance: req.body.data.balance}
+    })
+    .then(function(){
+        let updatedUser = getUpdatedUser(UserId)
+        return updatedUser
+    }) 
+    .then(updatedUser => res.status(201).json({updatedUser}))
+    .catch(err => res.status(400).json(errorParser.generateErrorResponse(err)));
+})
+
+router.put('/balance/:id', (req, res) => {
+    let UserId = req.params.id;
+    let data = req.body.data;
+
+    console.log(data)
+    return User.findByIdAndUpdate(req.params.id, {
+        $inc: {balance: req.body.data.balance}
     })
     .then(function(){
         let updatedUser = getUpdatedUser(UserId)
@@ -180,14 +200,13 @@ async function getUpdatedUser(userId){
             .populate('children', ('username', 'category_balance', '_id', 'goals'))
             .populate('goals')
         updatedUser.data = foundUser;
-        console.log(`foundUser: ${foundUser}`)
-        console.log(`updatedUser: ${updatedUser}`)
     }
     catch(err){
         console.log(`error: ${JSON.stringify(err)}`)
     }
     return updatedUser.data
 }
+
 
 module.exports = router;
 
