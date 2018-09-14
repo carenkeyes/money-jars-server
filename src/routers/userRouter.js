@@ -44,7 +44,7 @@ router.route('/protected/')
        console.log(`requestion: ${req}`) 
         User.findById(req.user)
         //.then(user => console.log(`user: ${user}`))
-        .populate('children', ('username', 'category_balance', '_id', 'goals'))
+        .populate('children', (['username', 'balance', '_id', 'goals']))
         .populate('goals')
         .then(user => res.json({
             user: {
@@ -64,7 +64,7 @@ router.route('/protected/')
 
 router.post('/login', disableWithToken, requiredFields('username', 'password'), (req, res) => {
     User.findOne({username: req.body.username})
-        .populate('children', ('username', 'category_balance', '_id', 'goals'))
+        .populate('children', (['_id', 'username', 'goals', 'balance']))
         .populate('goals')
     .then((foundResult) => {
         if(!foundResult){
@@ -122,11 +122,16 @@ router.put('/child/:id', (req, res) => {
             }
             return foundChild;
         })
-        .then((child) => {
-            addChild(child.id, parentId )
+        .then(function(child){
+            let updatedUser = addChild(child.id, parentId )
+            return updatedUser;
         })
-        .then(a => res.status(201).end())
-        .catch(err => res.status(400).json(errorParser.generateErrorResponse(report)));
+        .then(function(user){
+            let updatedUser = getUpdatedUser(parentId)
+            return updatedUser
+        })
+        .then(user => res.status(201).json({user}))
+        .catch(err => res.status(400).json(errorParser.generateErrorResponse(err)));
         
     });
 
@@ -136,9 +141,8 @@ async function addChild(childId, parentId){
     const parent = {};
 
     try{
-        User.findByIdAndUpdate(parentId, {$addToSet: {children: childId}})
-            .populate('children', ('username', 'category_balance', '_id', 'goals'))
-            .then((user) => parent.data=user)
+        const foundUser = await User.findByIdAndUpdate(parentId, {$addToSet: {children: childId}})
+        parent.data = foundUser;
     }
     catch(e){
         console.log(`error: ${JSON.stringify}`)
@@ -156,18 +160,17 @@ router.delete('/:id', (req, res) => {
 
 router.put('/:id', (req, res) => {
     let UserId = req.params.id;
-    let data = req.body.data;
+    const update = {};
+    const updateable = ['category_id', 'budget_id', 'setupComplete']
 
-    console.log(data)
-    return User.findByIdAndUpdate(req.params.id, {
-        $set: {
-            category_id: req.body.data.category_id,
-            budget_id: req.body.data.budget_id,
-            setupComplete: req.body.data.setupComplete,
-            account: req.body.data.account,
-            },
-        //$inc: {balance: req.body.data.balance}
-    })
+    updateable.forEach(field => {
+        if (field in req.body.data){
+            update[field] = req.body.data[field]
+        }
+    });
+
+    console.log(`update: ${update}`)
+    return User.findByIdAndUpdate(req.params.id, {$set: update})
     .then(function(){
         let updatedUser = getUpdatedUser(UserId)
         return updatedUser
@@ -197,13 +200,14 @@ async function getUpdatedUser(userId){
     try{
         const foundUser = await User
             .findById(userId)
-            .populate('children', ('username', 'category_balance', '_id', 'goals'))
+            .populate('children', (['username', 'category_balance', '_id', 'goals']))
             .populate('goals')
         updatedUser.data = foundUser;
     }
     catch(err){
         console.log(`error: ${JSON.stringify(err)}`)
     }
+    console.log(`updatedUser: ${updatedUser}`)
     return updatedUser.data
 }
 

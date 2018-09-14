@@ -12,7 +12,7 @@ module.exports = (req, res, next) => {
         .findById(userID)
         .populate('account')
         .then(function(user){
-            console.log(user)
+            console.log(`middleware user: ${user}`)
             token.id = user.account._id
             token.access_token = user.account.access_token
             token.expires_in = user.account.expires_in

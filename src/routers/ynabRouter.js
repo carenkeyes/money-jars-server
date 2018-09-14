@@ -64,12 +64,13 @@ async function retrieveBudgets(accessToken){
 
 router.get('/categories/:id',  refreshToken, (req, res) => {
     budgetID = req.query.budgetid;
+    console.log('get categories')
 
     return User
         .findByIdAndUpdate(req.params.id, {$set: {budget_id: budgetID}})
         .populate('account')
         .then(function(account){
-            //console.log(account)
+            console.log(`account: ${account}`)
             accessToken = account.account.access_token;
         })
     .then(function(){
@@ -84,6 +85,7 @@ router.get('/categories/:id',  refreshToken, (req, res) => {
 //.findByIdAndUpdate(req.params.id, {$set: {budget_id: budgetID}})
 
 async function retrieveCategories(budgetID){
+    console.log('retrieve categories')
     console.log(`budgetID: ${budgetID}`)
     console.log(`accessToken: ${accessToken}`)
     const ynabAPI = new ynab.API(accessToken);
@@ -161,11 +163,9 @@ async function retrieveBalance(user){
 //get the access token 
 //They are two steps currently because of development limitations
 router.post('/auth', (req, res) => {
-    const userID = req.query.state; 
+    const userId = req.query.state; 
     const code = req.query.code;
     const accountId = {}
-    console.log(userID)
-    console.log(code)
 
     request
         .post('https://app.youneedabudget.com/oauth/token')
@@ -184,17 +184,17 @@ router.post('/auth', (req, res) => {
                 refresh_token: data.refresh_token,
                 created_at: data.created_at,
             };
-            console.log(tokenData);
+            //console.log(tokenData);
             return tokenData;
         })
         .then (function(tokenData){
             let newAccount = Account.create(tokenData)               
-            console.log(`newAccount: ${newAccount}`)
+            //console.log(`newAccount: ${newAccount}`)
             return newAccount
         })
-        .then(function(newAccount, userId){
-            addToUser(newAccount._id, userId)
-            console.log(`second new account: ${newAccount}`)
+        .then(function(newAccount){
+            const userAccount = addToUser(newAccount._id, userId)
+            console.log(`userAccount ${userAccount}`)
             return newAccount.access_token
         })
         .then(function(token){
@@ -207,11 +207,13 @@ router.post('/auth', (req, res) => {
 })
 
 async function addToUser(accountId, userId){
+    console.log(`210 account_id: ${accountId}`)
+    console.log(`211 user_id: ${userId}`)
     const updatedUser = {}
 
     try{
         User.findByIdAndUpdate(userId, {$set: {account: accountId}} )
-        .then((user) => updatedUser.data = user);
+        .then((user) => {console.log(`215 user: ${user}`); updatedUser.data = user});
     }
     catch(e){
         console.log(`error: ${JSON.stringify}`)
