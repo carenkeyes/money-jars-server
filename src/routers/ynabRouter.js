@@ -103,7 +103,6 @@ async function retrieveCategories(budgetID){
         console.log(`error: ${JSON.stringify(e)}`);
     }
 
-    //console.log(`category list: ${categoryList}`)
     return categoryList
 }
 
@@ -123,14 +122,10 @@ router.get('/category/:id', refreshToken, (req, res) => {
 })
 
 async function retrieveBalance(user){
-    console.log('retrieve balance ran')
     let accessToken = user.account.access_token;
     let budID = user.budget_id;
     let catID = user.category_id;
 
-    console.log(`accessToken: ${accessToken}`)
-    console.log(`budID: ${budID}`)
-    console.log(`catID: ${catID}`)
     const ynabAPI = new ynab.API(accessToken);
 
     try{
@@ -143,22 +138,14 @@ async function retrieveBalance(user){
     catch (e) {
             console.log(`error: ${JSON.stringify(e)}`);
     }  
-    console.log(category);  
     return category;
 }
 
 
-
-//For production, add a visit to the authorization page first, then
-//get the access token 
-//They are two steps currently because of development limitations
 router.post('/auth', (req, res) => {
-    console.log("Hey, I'm here!!")
     const userId = req.query.state; 
     const code = req.query.code;
     const accountId = {}
-    console.log(userId)
-    console.log(code)
 
     request
         .post('https://app.youneedabudget.com/oauth/token')
@@ -177,21 +164,17 @@ router.post('/auth', (req, res) => {
                 refresh_token: data.refresh_token,
                 created_at: data.created_at,
             };
-            console.log(tokenData);
             return tokenData;
         })
         .then (function(tokenData){
             let newAccount = Account.create(tokenData)               
-            console.log(`newAccount: ${newAccount}`)
             return newAccount
         })
         .then(function(newAccount){
             const userAccount = addToUser(newAccount._id, userId)
-            console.log(`userAccount ${userAccount}`)
             return newAccount.access_token
         })
         .then(function(token){
-            console.log(`token: ${token}`)
             let budgetList = retrieveBudgets(token)
             return budgetList
         })
@@ -200,13 +183,11 @@ router.post('/auth', (req, res) => {
 })
 
 async function addToUser(accountId, userId){
-    console.log(`210 account_id: ${accountId}`)
-    console.log(`211 user_id: ${userId}`)
     const updatedUser = {}
 
     try{
         User.findByIdAndUpdate(userId, {$set: {account: accountId}} )
-        .then((user) => {console.log(`215 user: ${user}`); updatedUser.data = user});
+        .then((user) => {updatedUser.data = user});
     }
     catch(e){
         console.log(`error: ${JSON.stringify}`)
@@ -215,8 +196,6 @@ async function addToUser(accountId, userId){
 }
 
 async function retrieveBudgets(accessToken){
-    console.log('retrieve budgets ran');
-    console.log(`accessToken: ${accessToken}`)
     const ynabAPI = new ynab.API(accessToken);
     const budgetList = []
 
@@ -231,7 +210,6 @@ async function retrieveBudgets(accessToken){
         console.log(`error: ${JSON.stringify(e)}`);
     }
 
-    console.log(`budget list: ${budgetList[0].label}`)
     return budgetList
 }
 

@@ -4,7 +4,6 @@ const {CLIENT_SECRET} = require('../../config');
 const request = require('superagent');
 
 module.exports = (req, res, next) => {
-    console.log('refresh token ran');
     const userID = req.params.id;
     const token = {};
 
@@ -12,7 +11,6 @@ module.exports = (req, res, next) => {
         .findById(userID)
         .populate('account')
         .then(function(user){
-            console.log(`middleware user: ${user}`)
             token.id = user.account._id
             token.access_token = user.account.access_token
             token.expires_in = user.account.expires_in
@@ -20,7 +18,6 @@ module.exports = (req, res, next) => {
             token.created_at = user.account.created_at
         })
     .then((user) => {
-        console.log(`token.id: ${token.id}`)
         if(!token.access_token){
             const message = 'You must obtain an access token first';
             return res.status(400).json({
@@ -29,7 +26,6 @@ module.exports = (req, res, next) => {
             })
         }
         else if(token.created_at + token.expires_in < Math.floor(Date.now()/1000)){
-            console.log('token expired');
             request
             .post('https://app.youneedabudget.com/oauth/token')
             .send({
@@ -40,19 +36,15 @@ module.exports = (req, res, next) => {
             })
             .then(function(response){
                 const data = JSON.parse(response.text);
-                console.log(`data: ${data}`)
                 const tokenData = {
                     access_token: data.access_token,
                     expires_in: data.expires_in,
                     refresh_token: data.refresh_token,
                     created_at: data.created_at,
                 };
-                console.log(tokenData);
                 return tokenData;
             })
             .then (function(updateAccount){
-                console.log(`new token: ${updateAccount.access_token}`)
-                console.log(`token.id: ${token.id}`)
                 Account
                     .findByIdAndUpdate(token.id, {$set: updateAccount})
                     .then(account => console.log(`account: ${account}`))

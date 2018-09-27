@@ -43,7 +43,6 @@ router.route('/protected/')
     .get(passport.authenticate('jwt', {session: false}), (req, res) => {
        console.log(`requestion: ${req}`) 
         User.findById(req.user)
-        //.then(user => console.log(`user: ${user}`))
         .populate('children', (['username', 'balance', '_id', 'goals']))
         .populate('goals')
         .then(user => res.json({
@@ -52,7 +51,6 @@ router.route('/protected/')
                 username: user.username,
                 usertype: user.usertype,
                 budget_id: user.budget_id,
-                //category_id: user.category_id,
                 balance: user.balance,
                 children: user.children,
                 goals: user.goals,
@@ -72,7 +70,6 @@ router.post('/login', disableWithToken, requiredFields('username', 'password'), 
                 generalMessage: 'Username or password is incorrect',
             });
         }
-        //console.log(foundResult);
         return foundResult;
     })
     .then((foundUser) => {
@@ -111,7 +108,6 @@ router.post('/login', disableWithToken, requiredFields('username', 'password'), 
 });
 
 router.put('/child/:id', (req, res) => {
-    console.log(req.params.id);
     let parentId = req.params.id;
     User.findOne({username: req.body.username})
         .then((foundChild) => {
@@ -137,7 +133,6 @@ router.put('/child/:id', (req, res) => {
 
 
 async function addChild(childId, parentId){
-    console.log('add child ran')
     const parent = {};
 
     try{
@@ -147,7 +142,6 @@ async function addChild(childId, parentId){
     catch(e){
         console.log(`error: ${JSON.stringify}`)
     }
-    console.log(`parent: ${parent.data}`)
     return parent.data;
 }
 
@@ -169,7 +163,6 @@ router.put('/:id', (req, res) => {
         }
     });
 
-    console.log(`update: ${update}`)
     return User.findByIdAndUpdate(req.params.id, {$set: update})
     .then(function(){
         let updatedUser = getUpdatedUser(UserId)
@@ -183,7 +176,6 @@ router.put('/balance/:id', (req, res) => {
     let UserId = req.params.id;
     let data = req.body.data;
 
-    console.log(data)
     return User.findByIdAndUpdate(req.params.id, {
         $inc: {balance: req.body.data.balance}
     })
@@ -207,13 +199,8 @@ async function getUpdatedUser(userId){
     catch(err){
         console.log(`error: ${JSON.stringify(err)}`)
     }
-    console.log(`updatedUser: ${updatedUser}`)
     return updatedUser.data
 }
 
 
 module.exports = router;
-
-
-
-//User.findByIdAndUpdate(req.params.id, {$addToSet: {children: child._id}})
