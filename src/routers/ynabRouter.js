@@ -12,14 +12,10 @@ const bodyParser = require('body-parser');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
 
-const {CLIENT_SECRET, REDIRECT_URI} = require('../../config');
-//Oauth code will come from authorization request
-//This is for development only
-
+const {CLIENT_SECRET} = require('../../config');
 
 const ynab = require('ynab');
 let accessToken;
-//const ynabAPI = new ynab.API(accessToken);
 
 mongoose.Promise = global.Promise;
 
@@ -38,7 +34,7 @@ router.get('/budgets/:id', refreshToken, (req, res) => {
         .populate('account')
     .then((user) => retrieveBudgets(user.account.access_token))
     .then((budgets) =>res.json(budgets))   
-    .catch(err => res.status(400).json(errorParser.generateErrorResponse(err)))
+    .catch(err => res.status(500).json(errorParser.generateErrorResponse(err)))
 });
 
 async function retrieveBudgets(accessToken){
@@ -79,7 +75,7 @@ router.get('/categories/:id',  refreshToken, (req, res) => {
     .then(function(categories){
         res.json(categories);
     })   
-    .catch(err => res.status(400).json(errorParser.generateErrorResponse(err)))
+    .catch(err => res.status(500).json(errorParser.generateErrorResponse(err)))
 })
 
 //.findByIdAndUpdate(req.params.id, {$set: {budget_id: budgetID}})
@@ -128,7 +124,7 @@ router.get('/category/:id', refreshToken, (req, res) => {
     .then(function(balance){
         res.json(balance);
     })   
-    .catch(err => res.status(400).json(errorParser.generateErrorResponse(err)))
+    .catch(err => res.status(500).json(errorParser.generateErrorResponse(err)))
 
 })
 
@@ -203,7 +199,7 @@ router.post('/auth', (req, res) => {
             return budgetList
         })
         .then(budgets => res.json(budgets))
-        .catch(err => res.status(400).json(errorParser.generateErrorResponse(err)))    
+        .catch(err => res.status(500).json(errorParser.generateErrorResponse(err)))    
 })
 
 async function addToUser(accountId, userId){
