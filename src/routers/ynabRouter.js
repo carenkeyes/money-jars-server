@@ -159,16 +159,19 @@ async function retrieveBalance(user){
 //get the access token 
 //They are two steps currently because of development limitations
 router.post('/auth', (req, res) => {
+    console.log("Hey, I'm here!!")
     const userId = req.query.state; 
     const code = req.query.code;
     const accountId = {}
+    console.log(userId)
+    console.log(code)
 
     request
         .post('https://app.youneedabudget.com/oauth/token')
         .send({
             client_id: "524cb6ed48eb7037b8391bc45974590dace8e9b2434cc03e5ae595b54412cced",
             client_secret: `${CLIENT_SECRET}`,
-            redirect_uri: "urn:ietf:wg:oauth:2.0:oob",
+            redirect_uri: "https://money-jars.herokuapp.com/authorization",
             grant_type: "authorization_code",
             code: `${code}`
         })
@@ -180,12 +183,12 @@ router.post('/auth', (req, res) => {
                 refresh_token: data.refresh_token,
                 created_at: data.created_at,
             };
-            //console.log(tokenData);
+            console.log(tokenData);
             return tokenData;
         })
         .then (function(tokenData){
             let newAccount = Account.create(tokenData)               
-            //console.log(`newAccount: ${newAccount}`)
+            console.log(`newAccount: ${newAccount}`)
             return newAccount
         })
         .then(function(newAccount){
