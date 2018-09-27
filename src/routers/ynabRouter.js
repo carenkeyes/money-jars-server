@@ -112,17 +112,11 @@ router.get('/category/:id', refreshToken, (req, res) => {
     return User
         .findById(req.params.id)
         .populate('account')
-        /*.then(function(user){
-            accessToken = user.account.access_token;
-            budgetId = user.budget.budget_id,
-            categoryId = user.budget.category_id,
-            console.log(`accessToken: ${accessToken}`)
-        })*/
     .then(function(user){
         return retrieveBalance(user)
     })
     .then(function(balance){
-        res.json(balance);
+        res.status(201).json({balance: balance});
     })   
     .catch(err => res.status(500).json(errorParser.generateErrorResponse(err)))
 
