@@ -9,7 +9,7 @@ module.exports = {
             };
         }
         return{
-            generalMessage: 'Something went wrong. Again.',
+            generalMessage: 'Something went wrong.',
         }
     }
 }

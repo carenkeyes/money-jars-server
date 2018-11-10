@@ -53,6 +53,7 @@ router.route('/:id')
     })
     .put((req, res) => {
         userId = req.body.userId
+        console.log(req.body)
         Goal.findByIdAndUpdate(req.params.id,
             {
                 $inc: {saved_amount: req.body.change},
@@ -102,11 +103,35 @@ async function getUpdatedGoals(userId){
     return updatedGoals
 }
 
-router.route('/request/:id')
+//I don't think I'm using this
+/*router.route('/request/:id')
     .put((req, res) => {
         Goal.findByIdAndUpdate(req.params.id, {$unset: {withdraw_request: ''}})
         .then(() => res.status(204).end())
-    })
+    })*/
             
+
+router.route('/edit/:id')
+    .put((req, res) => {
+        const _id = req.params.id
+        const bodyFields = req.body.edits
+        console.log(req.body)
+        console.log(bodyFields)
+        const update = {};
+        const updateable = ['title', 'category', 'goal_amount', 'goal_image', 'request']
+        updateable.forEach(field => {
+            if(field in bodyFields){
+                update[field] = bodyFields[field]
+            }
+        });
+        console.log(update)
+        Goal.findByIdAndUpdate(req.params.id, {$set: update})
+        .then(function(){
+            const updatedGoal = Goal.findById(_id)
+            return updatedGoal
+        })
+        .then((goal) => res.status(201).send(goal))
+        .catch(report => res.status(400).json(errorParser.generateErrorResponse(report)))
+    })    
 
 module.exports = router;
