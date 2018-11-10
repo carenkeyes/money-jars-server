@@ -57,7 +57,7 @@ router.route('/:id')
         Goal.findByIdAndUpdate(req.params.id,
             {
                 $inc: {saved_amount: req.body.change},
-                //$set: {withdraw_request: req.body.request}
+                $set: {withdraw_request: req.body.request}
             }
         ).then(function(){
             let updatedGoals = getUpdatedGoals(userId)
@@ -113,16 +113,24 @@ async function getUpdatedGoals(userId){
 
 router.route('/edit/:id')
     .put((req, res) => {
+        const _id = req.params.id
+        const bodyFields = req.body.edits
+        console.log(req.body)
+        console.log(bodyFields)
         const update = {};
         const updateable = ['title', 'category', 'goal_amount', 'goal_image', 'request']
         updateable.forEach(field => {
-            if(field in req.body){
-                update[field] = req.body[field]
+            if(field in bodyFields){
+                update[field] = bodyFields[field]
             }
         });
         console.log(update)
         Goal.findByIdAndUpdate(req.params.id, {$set: update})
-        .then((goals) => res.status(201).send(goals))
+        .then(function(){
+            const updatedGoal = Goal.findById(_id)
+            return updatedGoal
+        })
+        .then((goal) => res.status(201).send(goal))
         .catch(report => res.status(400).json(errorParser.generateErrorResponse(report)))
     })    
 
